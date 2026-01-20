@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 export default function Home() {
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<{ id: string; subject: string; from: string; date: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState(false);
@@ -11,21 +11,16 @@ export default function Home() {
   const handleFetchEmails = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch("/api/gmail/messages");
       const data = await response.json();
-
       if (response.status === 401) {
-        // Redirect to sign in
         window.location.href = "/api/auth/signin";
         return;
       }
-
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch emails");
       }
-
       setMessages(data.messages);
       setHasFetched(true);
     } catch (err: any) {
@@ -49,7 +44,7 @@ export default function Home() {
           <p className="text-lg text-gray-600 dark:text-gray-300">
             Click below to authenticate and fetch your Gmail messages
           </p>
-          
+
           {/* Project Progress Badge */}
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-full border border-green-300 dark:border-green-700">
             <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +88,7 @@ export default function Home() {
                 <span className="text-gray-700 dark:text-gray-300">Error handling & re-authentication</span>
               </li>
             </ul>
-            
+
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
                 📋 Coming in v2.0
@@ -195,7 +190,7 @@ export default function Home() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Gmail Message IDs ({messages.length})
+                Insurance Emails ({messages.length})
               </h2>
               <button
                 onClick={handleFetchEmails}
@@ -205,15 +200,26 @@ export default function Home() {
               </button>
             </div>
             <div className="max-h-150 overflow-y-auto scroll-smooth">
-              <ul className="divide-y divide-gray-200 dark:divide-gray-700" role="list" aria-label="Gmail message IDs">
-                {messages.map((messageId, index) => (
+              <ul className="divide-y divide-gray-200 dark:divide-gray-700" role="list" aria-label="Insurance emails">
+                {messages.map((msg, index) => (
                   <li
-                    key={messageId || index}
+                    key={msg.id || index}
                     className="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
-                    <span className="font-mono text-sm text-gray-700 dark:text-gray-300">
-                      {messageId}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-semibold text-gray-900 dark:text-gray-100 text-base truncate">
+                        {msg.subject || "(No Subject)"}
+                      </span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                        {msg.from}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-500">
+                        {msg.date}
+                      </span>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-600 font-mono">
+                        {msg.id}
+                      </span>
+                    </div>
                   </li>
                 ))}
               </ul>

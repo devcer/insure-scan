@@ -1,3 +1,4 @@
+import { attachmentQuery } from "@/app/queries";
 import { auth } from "@/auth";
 import { google } from "googleapis";
 import { NextResponse } from "next/server";
@@ -19,16 +20,35 @@ export async function GET() {
     // Initialize Gmail API
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-    // Fetch top 100 messages
-    const response = await gmail.users.messages.list({
+    // Fetch top 100 insurance-related messages from last 365 days
+    const listResponse = await gmail.users.messages.list({
       userId: "me",
       maxResults: 100,
+      q: attachmentQuery,
     });
 
-    // Extract message IDs
-    const messageIds = response.data.messages?.map((msg) => msg.id) || [];
+    const messageIds = listResponse.data.messages?.map((msg) => msg.id) || [];
 
-    return NextResponse.json({ messages: messageIds });
+    // Fetch details for each message
+    const messages = await Promise.all(
+      messageIds.map(async (id) => {
+        try {
+          const msg = await gmail.users.messages.get({ userId: "me", id });
+          const headers = msg.data.payload?.headers || [];
+          const getHeader = (name) => headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value || "";
+          return {
+            id,
+            subject: getHeader("Subject"),
+            from: getHeader("From"),
+            date: getHeader("Date"),
+          };
+        } catch (e) {
+          return { id, subject: "(Failed to load)", from: "", date: "" };
+        }
+      })
+    );
+
+    return NextResponse.json({ messages });
   } catch (error) {
     console.error("Gmail API error:", error);
 
