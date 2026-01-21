@@ -186,3 +186,14 @@ export const paymentQuery = `newer_than:365d
   )
 )
 `.trim();
+
+export const issuedPolicyQuery = `newer_than:365d
+(
+  ${buildFromClause(insuranceDomains)}
+)
+(
+  (
+    ("policy issued")
+  )
+)
+`.trim();

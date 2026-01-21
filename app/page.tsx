@@ -1,12 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 
 export default function Home() {
   const [messages, setMessages] = useState<{ id: string; subject: string; from: string; date: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const cached = localStorage.getItem("insuranceScannerEmails");
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed && Array.isArray(parsed.messages)) {
+          setMessages(parsed.messages);
+          setHasFetched(true);
+        }
+      } catch { }
+    }
+  }, []);
 
   const handleFetchEmails = async () => {
     setLoading(true);
@@ -23,6 +38,8 @@ export default function Home() {
       }
       setMessages(data.messages);
       setHasFetched(true);
+      // Store the entire API response in localStorage
+      localStorage.setItem("insuranceScannerEmails", JSON.stringify(data));
     } catch (err: any) {
       setError(err.message || "An error occurred while fetching emails");
     } finally {
@@ -44,7 +61,6 @@ export default function Home() {
           <p className="text-lg text-gray-600 dark:text-gray-300">
             Click below to authenticate and fetch your Gmail messages
           </p>
-
           {/* Project Progress Badge */}
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-full border border-green-300 dark:border-green-700">
             <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +71,6 @@ export default function Home() {
             </span>
           </div>
         </div>
-
         {/* Feature Status Panel */}
         {!hasFetched && !loading && !error && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
@@ -88,7 +103,6 @@ export default function Home() {
                 <span className="text-gray-700 dark:text-gray-300">Error handling & re-authentication</span>
               </li>
             </ul>
-
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
                 📋 Coming in v2.0
@@ -142,8 +156,7 @@ export default function Home() {
               {Array.from({ length: 10 }).map((_, index) => (
                 <div
                   key={index}
-                  className={`h-8 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse ${index % 2 === 0 ? "w-full" : "w-11/12"
-                    }`}
+                  className={`h-8 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse ${index % 2 === 0 ? "w-full" : "w-11/12"}`}
                 ></div>
               ))}
             </div>
