@@ -1,261 +1,80 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
+import { signIn } from "next-auth/react";
 
 export default function Home() {
-  const [messages, setMessages] = useState<{ id: string; subject: string; from: string; date: string }[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const cached = localStorage.getItem("insuranceScannerEmails");
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (parsed && Array.isArray(parsed.messages)) {
-          setMessages(parsed.messages);
-          setHasFetched(true);
-        }
-      } catch { }
-    }
-  }, []);
-
-  const handleFetchEmails = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/gmail/messages");
-      const data = await response.json();
-      if (response.status === 401) {
-        window.location.href = "/api/auth/signin";
-        return;
-      }
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch emails");
-      }
-      setMessages(data.messages);
-      setHasFetched(true);
-      // Store the entire API response in localStorage
-      localStorage.setItem("insuranceScannerEmails", JSON.stringify(data));
-    } catch (err: any) {
-      setError(err.message || "An error occurred while fetching emails");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReAuthenticate = () => {
-    window.location.href = "/api/auth/signin";
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl: "/insurance/dashboard" });
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Insurance Scanner
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto text-center">
+        <div className="mb-12">
+          <h1 className="text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            Insurance Premium Scanner
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Click below to authenticate and fetch your Gmail messages
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+            Automatically scan, organize, and track all your insurance premiums in one secure digital wallet
           </p>
-          {/* Project Progress Badge */}
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-full border border-green-300 dark:border-green-700">
-            <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-sm font-medium text-green-800 dark:text-green-300">
-              v1.0 - OAuth & Message IDs Active
-            </span>
+        </div>
+
+        <button
+          onClick={handleGoogleSignIn}
+          className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+        >
+          <svg className="w-6 h-6" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
+          </svg>
+          <span className="text-lg font-semibold text-gray-900 dark:text-white">
+            Continue with Google
+          </span>
+        </button>
+
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <div className="text-4xl mb-3">📧</div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Auto-Scan Emails
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Automatically detect insurance emails and extract premium details
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <div className="text-4xl mb-3">💳</div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Digital Wallet
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Store all policies in one secure, organized digital wallet
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <div className="text-4xl mb-3">🔔</div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Smart Reminders
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Never miss a renewal with intelligent premium reminders
+            </p>
           </div>
         </div>
-        {/* Feature Status Panel */}
-        {!hasFetched && !loading && !error && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              🚀 Current Features (v1.0)
-            </h2>
-            <ul className="space-y-2">
-              <li className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700 dark:text-gray-300">Google OAuth authentication</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700 dark:text-gray-300">Fetch top 100 Gmail message IDs</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700 dark:text-gray-300">Refresh functionality</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700 dark:text-gray-300">Error handling & re-authentication</span>
-              </li>
-            </ul>
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                📋 Coming in v2.0
-              </h3>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-600 dark:text-gray-400">Display email subjects and sender information</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-600 dark:text-gray-400">Email filtering and search</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-600 dark:text-gray-400">Insurance document detection</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-600 dark:text-gray-400">Export to CSV/PDF</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* Fetch/Refresh Button */}
-        {!hasFetched && !loading && !error && (
-          <div className="flex justify-center mb-8">
-            <button
-              onClick={handleFetchEmails}
-              className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
-            >
-              Fetch Emails
-            </button>
-          </div>
-        )}
-
-        {/* Skeleton Loader */}
-        {loading && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <div className="space-y-2">
-              {Array.from({ length: 10 }).map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-8 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse ${index % 2 === 0 ? "w-full" : "w-11/12"}`}
-                ></div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Error UI */}
-        {error && !loading && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-8">
-            <div className="flex flex-col items-center justify-center">
-              <div className="text-red-500 w-12 h-12 mb-4">
-                <svg
-                  className="w-full h-full"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
-                Error Occurred
-              </h2>
-              <p className="text-sm text-red-700 dark:text-red-300 text-center mb-4 max-w-md">
-                {error}
-              </p>
-              <button
-                onClick={handleReAuthenticate}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-              >
-                Re-authenticate
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Message List */}
-        {hasFetched && !loading && !error && messages.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Insurance Emails ({messages.length})
-              </h2>
-              <button
-                onClick={handleFetchEmails}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Refresh
-              </button>
-            </div>
-            <div className="max-h-150 overflow-y-auto scroll-smooth">
-              <ul className="divide-y divide-gray-200 dark:divide-gray-700" role="list" aria-label="Insurance emails">
-                {messages.map((msg, index) => (
-                  <li
-                    key={msg.id || index}
-                    className="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100 text-base truncate">
-                        {msg.subject || "(No Subject)"}
-                      </span>
-                      <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                        {msg.from}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-500">
-                        {msg.date}
-                      </span>
-                      <span className="text-[10px] text-gray-400 dark:text-gray-600 font-mono">
-                        {msg.id}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {hasFetched && !loading && !error && messages.length === 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-            <div className="flex flex-col items-center justify-center">
-              <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
-                No messages found in your Gmail account.
-              </p>
-              <button
-                onClick={handleFetchEmails}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
