@@ -18,6 +18,7 @@ export default function InsuranceLayout({
   const navLinks = [
     { href: "/insurance/dashboard", label: "Dashboard" },
     { href: "/insurance/premiums", label: "Premiums" },
+    { href: "/insurance/emails", label: "Emails" },
     { href: "/insurance/settings", label: "Settings" },
   ];
 
@@ -43,8 +44,8 @@ export default function InsuranceLayout({
                   key={link.href}
                   href={link.href}
                   className={`text-sm font-medium transition-colors ${pathname === link.href
-                      ? "text-blue-600 dark:text-blue-400"
-                      : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                     }`}
                 >
                   {link.label}
@@ -68,21 +69,21 @@ export default function InsuranceLayout({
                 key={link.href}
                 href={link.href}
                 className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === link.href
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
               >
                 {link.label}
               </Link>
             ))}
           </div>
-        </div>
-      </nav>
+        </div >
+      </nav >
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      < main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" >
         {children}
-      </main>
-    </div>
+      </main >
+    </div >
   );
 }

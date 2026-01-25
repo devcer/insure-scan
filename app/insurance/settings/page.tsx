@@ -1,7 +1,56 @@
-import { auth } from "@/auth";
+"use client";
 
-export default async function SettingsPage() {
-  const session = await auth();
+import { useSession, signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+
+interface GmailConnection {
+  email: string;
+  updated_at: string;
+}
+
+export default function SettingsPage() {
+  const { data: session } = useSession();
+  const [connection, setConnection] = useState<GmailConnection | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchConnection = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/insurance/gmail-connection");
+      if (response.ok) {
+        const data = await response.json();
+        setConnection(data.connection);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!confirm("Are you sure you want to disconnect Gmail?")) return;
+
+    try {
+      const response = await fetch("/api/insurance/gmail-connection", {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setConnection(null);
+        alert("Gmail disconnected successfully");
+      }
+    } catch (err) {
+      alert("Failed to disconnect Gmail");
+    }
+  };
+
+  const handleReconnect = () => {
+    signIn("google");
+  };
+
+  useEffect(() => {
+    fetchConnection();
+  }, []);
 
   return (
     <div>
@@ -41,61 +90,50 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      {/* Notification Preferences */}
+      {/* Gmail Connection */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Notification Preferences
-          </h2>
-        </div>
-        <div className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">
-                Renewal Reminders
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Get notified before your policy expires
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-              defaultChecked
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">
-                Email Notifications
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Receive updates via email
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-              defaultChecked
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border-2 border-red-200 dark:border-red-800">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-red-600 dark:text-red-400">
-            Danger Zone
+            Gmail Connection
           </h2>
         </div>
         <div className="p-6">
-          <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-            Delete Account
-          </button>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            This action cannot be undone. All your data will be permanently deleted.
-          </p>
+          {loading ? (
+            <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+          ) : connection ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Connected Email
+                </label>
+                <p className="text-gray-900 dark:text-white">{connection.email}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Last Synced
+                </label>
+                <p className="text-gray-900 dark:text-white">
+                  {new Date(connection.updated_at).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={handleDisconnect}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Disconnect Gmail
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-gray-600 dark:text-gray-400">No Gmail account connected</p>
+              <button
+                onClick={handleReconnect}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Connect Gmail
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

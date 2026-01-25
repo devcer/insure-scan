@@ -33,9 +33,10 @@ export async function GET() {
     const messages = await Promise.all(
       messageIds.map(async (id) => {
         try {
+          if (!id) return { id: "", subject: "(Invalid ID)", from: "", date: "" };
           const msg = await gmail.users.messages.get({ userId: "me", id });
           const headers = msg.data.payload?.headers || [];
-          const getHeader = (name) => headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value || "";
+          const getHeader = (name: string) => headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || "";
           return {
             id,
             subject: getHeader("Subject"),
@@ -43,7 +44,7 @@ export async function GET() {
             date: getHeader("Date"),
           };
         } catch (e) {
-          return { id, subject: "(Failed to load)", from: "", date: "" };
+          return { id: id || "", subject: "(Failed to load)", from: "", date: "" };
         }
       })
     );
