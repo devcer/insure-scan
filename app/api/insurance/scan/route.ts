@@ -8,9 +8,24 @@ import { INSURANCE_QUERY } from "@/lib/gmail/gmailQuery";
 
 export async function POST(request: NextRequest) {
   try {
+    // Debug: Log request method and headers
+    console.log("[SCAN] Incoming request", {
+      method: request.method,
+      headers: Object.fromEntries(request.headers.entries()),
+    });
+
     // Validate session
     const session = await auth();
+    console.log("[SCAN] Session result", session);
+
+    // Check for refresh token error
+    if (session?.error === "RefreshAccessTokenError") {
+      console.error("[SCAN] Token refresh failed, user needs to re-authenticate");
+      return NextResponse.json({ error: "Authentication expired. Please sign in again." }, { status: 401 });
+    }
+
     if (!session || !session.userId || !session.accessToken) {
+      console.warn("[SCAN] 401 Unauthorized: session missing or incomplete", { session });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
