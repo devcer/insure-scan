@@ -1,49 +1,84 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { listInsuranceEmails, getEmailMessage, isGmailApiError } from "@/lib/gmail/gmailClient";
+import { extractEmailMetadata } from "@/lib/gmail/decodeMessage";
+import { INSURANCE_QUERY } from "@/lib/gmail/gmailQuery";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
+    console.log("[PREMIUMS] Fetching insurance emails from Gmail");
+
     // Validate session
     const session = await auth();
-    if (!session || !session.userId) {
+    console.log("[PREMIUMS] Session:", {
+      hasSession: !!session,
+      hasAccessToken: !!session?.accessToken,
+      userEmail: session?.user?.email,
+    });
+
+    if (!session || !session.accessToken) {
+      console.warn("[PREMIUMS] 401 Unauthorized: missing accessToken");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { userId } = session;
-    const supabase = createSupabaseServerClient();
+    const { accessToken } = session;
+    console.log("[PREMIUMS] ✅ Authentication successful");
 
-    // Get query parameters
-    const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get("status");
-    const search = searchParams.get("search");
+    // List insurance emails from Gmail
+    console.log("[PREMIUMS] Calling Gmail API...");
+    const listResponse = await listInsuranceEmails({
+      accessToken,
+      query: INSURANCE_QUERY,
+      maxResults: 50,
+    });
 
-    // Build query
-    let query = supabase.from("insurance_premiums").select("*").eq("user_id", userId);
-
-    // Apply status filter
-    if (status && status !== "ALL") {
-      query = query.eq("payment_status", status);
+    if (isGmailApiError(listResponse)) {
+      console.error("[PREMIUMS] Gmail API error:", listResponse);
+      return NextResponse.json({ error: "Failed to fetch emails from Gmail", details: listResponse.error }, { status: 500 });
     }
 
-    // Apply search filter
-    if (search) {
-      query = query.or(`insurer_name.ilike.%${search}%,policy_number.ilike.%${search}%`);
+    const messageIds = listResponse.messages?.map((m) => m.id) || [];
+    console.log("[PREMIUMS] Found", messageIds.length, "insurance emails");
+
+    // Fetch message details for first 20 emails
+    const premiums = [];
+    for (const messageId of messageIds.slice(0, 20)) {
+      try {
+        const messageResponse = await getEmailMessage({
+          accessToken,
+          messageId,
+          format: "full",
+        });
+
+        if (isGmailApiError(messageResponse)) {
+          console.error(`[PREMIUMS] Failed to fetch message ${messageId}`);
+          continue;
+        }
+
+        const metadata = extractEmailMetadata(messageResponse.message);
+
+        // Map email metadata to premium structure
+        premiums.push({
+          id: messageId,
+          insurer_name: metadata.from || "Unknown Sender",
+          policy_number: null,
+          amount: null,
+          due_date: null,
+          payment_status: "UNKNOWN",
+          received_at: metadata.date || new Date().toISOString(),
+          email_subject: metadata.subject,
+          email_from: metadata.from,
+        });
+      } catch (err) {
+        console.error(`[PREMIUMS] Error processing message ${messageId}:`, err);
+        continue;
+      }
     }
 
-    // Order by received_at descending
-    query = query.order("received_at", { ascending: false });
-
-    const { data: premiums, error } = await query;
-
-    if (error) {
-      console.error("Database error:", error);
-      return NextResponse.json({ error: "Failed to fetch premiums" }, { status: 500 });
-    }
-
-    return NextResponse.json({ premiums: premiums || [] });
+    console.log("[PREMIUMS] Returning", premiums.length, "emails");
+    return NextResponse.json({ premiums });
   } catch (error) {
-    console.error("Error fetching premiums:", error);
+    console.error("[PREMIUMS] Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

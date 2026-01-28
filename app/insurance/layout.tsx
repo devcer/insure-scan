@@ -17,7 +17,7 @@ export default function InsuranceLayout({
 
   const navLinks = [
     { href: "/insurance/dashboard", label: "Dashboard" },
-    { href: "/insurance/premiums", label: "Premiums" },
+    { href: "/insurance/policies", label: "Policies" },
     { href: "/insurance/emails", label: "Emails" },
     { href: "/insurance/settings", label: "Settings" },
   ];
