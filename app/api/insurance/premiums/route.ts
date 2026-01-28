@@ -1,82 +1,70 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listInsuranceEmails, getEmailMessage, isGmailApiError } from "@/lib/gmail/gmailClient";
 import { extractEmailMetadata } from "@/lib/gmail/decodeMessage";
 import { INSURANCE_QUERY } from "@/lib/gmail/gmailQuery";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    console.log("[PREMIUMS] Fetching insurance emails from Gmail");
+    console.log("[PREMIUMS] Fetching premiums");
 
     // Validate session
     const session = await auth();
     console.log("[PREMIUMS] Session:", {
       hasSession: !!session,
       hasAccessToken: !!session?.accessToken,
-      userEmail: session?.user?.email,
+      userEmail: session?.userEmail,
     });
 
-    if (!session || !session.accessToken) {
-      console.warn("[PREMIUMS] 401 Unauthorized: missing accessToken");
+    if (!session || !session.accessToken || !session.userEmail) {
+      console.warn("[PREMIUMS] 401 Unauthorized");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { accessToken } = session;
-    console.log("[PREMIUMS] ✅ Authentication successful");
+    const supabase = createSupabaseServerClient();
+    const { accessToken, userEmail } = session;
 
-    // List insurance emails from Gmail
-    console.log("[PREMIUMS] Calling Gmail API...");
-    const listResponse = await listInsuranceEmails({
-      accessToken,
-      query: INSURANCE_QUERY,
-      maxResults: 50,
-    });
+    // Get user ID from email
+    console.log("[PREMIUMS] Looking up user ID for:", userEmail);
+    const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single();
 
-    if (isGmailApiError(listResponse)) {
-      console.error("[PREMIUMS] Gmail API error:", listResponse);
-      return NextResponse.json({ error: "Failed to fetch emails from Gmail", details: listResponse.error }, { status: 500 });
+    if (userError || !user) {
+      console.error("[PREMIUMS] User not found:", userError);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const messageIds = listResponse.messages?.map((m) => m.id) || [];
-    console.log("[PREMIUMS] Found", messageIds.length, "insurance emails");
+    const userId = user.id;
+    console.log("[PREMIUMS] ✅ Found user ID:", userId);
 
-    // Fetch message details for first 20 emails
-    const premiums = [];
-    for (const messageId of messageIds.slice(0, 20)) {
-      try {
-        const messageResponse = await getEmailMessage({
-          accessToken,
-          messageId,
-          format: "full",
-        });
+    // Get query parameters for filtering
+    const url = new URL(request.url);
+    const status = url.searchParams.get("status");
+    const search = url.searchParams.get("search");
 
-        if (isGmailApiError(messageResponse)) {
-          console.error(`[PREMIUMS] Failed to fetch message ${messageId}`);
-          continue;
-        }
+    // Build Supabase query
+    console.log("[PREMIUMS] Building query with filters:", { status, search });
+    let query = supabase.from("insurance_premiums").select("*").eq("user_id", userId).order("received_at", { ascending: false });
 
-        const metadata = extractEmailMetadata(messageResponse.message);
-
-        // Map email metadata to premium structure
-        premiums.push({
-          id: messageId,
-          insurer_name: metadata.from || "Unknown Sender",
-          policy_number: null,
-          amount: null,
-          due_date: null,
-          payment_status: "UNKNOWN",
-          received_at: metadata.date || new Date().toISOString(),
-          email_subject: metadata.subject,
-          email_from: metadata.from,
-        });
-      } catch (err) {
-        console.error(`[PREMIUMS] Error processing message ${messageId}:`, err);
-        continue;
-      }
+    // Apply status filter
+    if (status && status !== "ALL") {
+      query = query.eq("payment_status", status);
     }
 
-    console.log("[PREMIUMS] Returning", premiums.length, "emails");
-    return NextResponse.json({ premiums });
+    // Apply search filter
+    if (search) {
+      query = query.or(`insurer_name.ilike.%${search}%,policy_number.ilike.%${search}%,email_subject.ilike.%${search}%`);
+    }
+
+    const { data: premiums, error: queryError } = await query;
+
+    if (queryError) {
+      console.error("[PREMIUMS] Database query error:", queryError);
+      return NextResponse.json({ error: "Failed to fetch premiums" }, { status: 500 });
+    }
+
+    console.log("[PREMIUMS] ✅ Returned", premiums?.length || 0, "premiums from database");
+    return NextResponse.json({ premiums: premiums || [] });
   } catch (error) {
     console.error("[PREMIUMS] Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

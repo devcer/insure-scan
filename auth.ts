@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -17,7 +18,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, profile }) {
       console.log("[AUTH JWT] Starting callback");
       console.log("[AUTH JWT] Has account:", !!account);
       console.log("[AUTH JWT] Token email:", token.email);
@@ -32,6 +33,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.expiresAt = account.expires_at;
+      }
+
+      // Auto-create user on first sign-in
+      if (profile && token.email) {
+        console.log("[AUTH JWT] Creating/updating user for:", token.email);
+        try {
+          const supabase = createSupabaseServerClient();
+          const { data: user, error } = await supabase
+            .from("users")
+            .upsert(
+              {
+                email: token.email,
+                name: profile.name,
+                image: (profile as any).picture,
+                updated_at: new Date().toISOString(),
+              },
+              {
+                onConflict: "email",
+                ignoreDuplicates: false,
+              },
+            )
+            .select("id")
+            .single();
+
+          if (error) {
+            console.error("[AUTH JWT] User upsert error:", error);
+          } else {
+            console.log("[AUTH JWT] ✅ User created/updated:", user?.id);
+          }
+        } catch (err) {
+          console.error("[AUTH JWT] Exception creating user:", err);
+        }
       }
 
       // Check if access token needs refresh
@@ -95,6 +128,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       // Pass OAuth tokens to session
       session.accessToken = token.accessToken as string;
+      session.userEmail = token.email as string;
 
       // Pass refresh error to session
       if (token.error) {
