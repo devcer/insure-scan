@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listInsuranceEmails, getEmailMessage, isGmailApiError } from "@/lib/gmail/gmailClient";
 import { extractEmailMetadata, decodeMessage } from "@/lib/gmail/decodeMessage";
 import { INSURANCE_QUERY } from "@/lib/gmail/gmailQuery";
+import { getCompanyNameFromEmail } from "@/lib/domain/companyMapping";
 
 export async function POST() {
   try {
@@ -93,7 +94,7 @@ export async function POST() {
           user_id: userId,
           gmail_message_id: messageId,
           policy_key: policyKey,
-          insurer_name: metadata.from || "Unknown Sender",
+          insurer_name: getCompanyNameFromEmail(metadata.from),
           policy_number: null,
           amount: null,
           due_date: null,
