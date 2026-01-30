@@ -31,4 +31,4 @@ export const DEFAULT_MAX_RESULTS = 100;
 /**
  * Maximum allowed by Gmail API per request
  */
-export const MAX_RESULTS_LIMIT = 500;
+export const MAX_RESULTS_LIMIT = 10;

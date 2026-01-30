@@ -115,22 +115,29 @@ const DOMAIN_TO_COMPANY: Record<string, string> = {
  * @returns Company name or "Unknown" if aggregator/not recognized
  */
 export function getCompanyNameFromEmail(email: string): string {
-  if (!email) return "Unknown";
+  if (!email) {
+    console.log("[DOMAIN] Empty email, returning Unknown");
+    return "Unknown";
+  }
 
   const fullDomain = extractFullDomainFromEmail(email);
+  console.log(`[DOMAIN] Extracted domain: ${fullDomain} from email: ${email}`);
 
   // Check if it's an aggregator domain (exact match)
   if (AGGREGATOR_DOMAINS.includes(fullDomain)) {
+    console.log(`[DOMAIN] ⚠️ Aggregator detected: ${fullDomain}`);
     return "Unknown";
   }
 
   // Check if the domain ends with any known insurance domain
   for (const [knownDomain, companyName] of Object.entries(DOMAIN_TO_COMPANY)) {
     if (fullDomain.endsWith(knownDomain)) {
+      console.log(`[DOMAIN] ✅ Match found: ${fullDomain} ends with ${knownDomain} → ${companyName}`);
       return companyName;
     }
   }
 
   // If not found, return "Unknown"
+  console.log(`[DOMAIN] ❌ No match found for: ${fullDomain}`);
   return "Unknown";
 }

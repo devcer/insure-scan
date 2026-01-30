@@ -87,6 +87,18 @@ export async function POST() {
         const metadata = extractEmailMetadata(messageResponse.message);
         const body = decodeMessage(messageResponse.message);
 
+        // Log metadata for debugging
+        console.log(`[SCAN] 📬 Metadata for ${messageId}:`, {
+          from: metadata.from,
+          subject: metadata.subject,
+          date: metadata.date,
+          bodyPreview: body.slice(0, 100) + "...",
+        });
+
+        // Map email to company name with logging
+        const companyName = getCompanyNameFromEmail(metadata.from);
+        console.log(`[SCAN] 📧 Email: ${metadata.from} → 🏢 Company: ${companyName}`);
+
         // Generate policy_key from insurer name and subject
         const policyKey = `${metadata.from?.toLowerCase()}-${metadata.subject?.toLowerCase()}`.slice(0, 100);
 
@@ -94,7 +106,7 @@ export async function POST() {
           user_id: userId,
           gmail_message_id: messageId,
           policy_key: policyKey,
-          insurer_name: getCompanyNameFromEmail(metadata.from),
+          insurer_name: companyName,
           policy_number: null,
           amount: null,
           due_date: null,
