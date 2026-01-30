@@ -119,16 +119,16 @@ export function getCompanyNameFromEmail(email: string): string {
 
   const fullDomain = extractFullDomainFromEmail(email);
 
-  // Check if it's an aggregator domain
+  // Check if it's an aggregator domain (exact match)
   if (AGGREGATOR_DOMAINS.includes(fullDomain)) {
     return "Unknown";
   }
 
-  // Check if domain is in our company mapping
-  const companyName = DOMAIN_TO_COMPANY[fullDomain];
-
-  if (companyName) {
-    return companyName;
+  // Check if the domain ends with any known insurance domain
+  for (const [knownDomain, companyName] of Object.entries(DOMAIN_TO_COMPANY)) {
+    if (fullDomain.endsWith(knownDomain)) {
+      return companyName;
+    }
   }
 
   // If not found, return "Unknown"
