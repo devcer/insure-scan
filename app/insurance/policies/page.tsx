@@ -87,7 +87,9 @@ export default function PoliciesPage() {
       if (search) params.set("search", search);
       if (showArchived) params.set("archived", "only");
 
-      const response = await fetch(`/api/insurance/premiums?${params}`);
+      const response = await fetch(`/api/insurance/premiums?${params}`, {
+        cache: 'no-store', // Force fresh data from server
+      });
       if (!response.ok) throw new Error("Failed to fetch premiums");
       const result = await response.json();
       setPremiums(result.premiums);

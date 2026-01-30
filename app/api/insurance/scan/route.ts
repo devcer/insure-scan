@@ -63,7 +63,7 @@ export async function POST() {
     console.log("[SCAN] Found messages:", messageIds.length);
 
     let savedCount = 0;
-    let updatedCount = 0;
+    const updatedCount = 0;
     let errorCount = 0;
 
     // Process each message
@@ -106,35 +106,22 @@ export async function POST() {
           raw_preview_text: body.slice(0, 500),
         };
 
-        // Try to upsert (create or update if gmail_message_id exists)
-        const { data: existing } = await supabase.from("insurance_premiums").select("id").eq("gmail_message_id", messageId).single();
+        // Use upsert to insert or update in a single atomic operation
+        console.log(`[SCAN] Upserting premium for message ${messageId}`);
+        const { error: upsertError } = await supabase
+          .from("insurance_premiums")
+          .upsert(premiumData, {
+            onConflict: "gmail_message_id",
+            ignoreDuplicates: false, // Always update on conflict
+          })
+          .select("id");
 
-        if (existing) {
-          console.log(`[SCAN] Updating existing premium for message ${messageId}`);
-          const { error: updateError } = await supabase
-            .from("insurance_premiums")
-            .update({
-              ...premiumData,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", existing.id);
-
-          if (updateError) {
-            console.error(`[SCAN] Update error for ${messageId}:`, updateError);
-            errorCount++;
-          } else {
-            updatedCount++;
-          }
+        if (upsertError) {
+          console.error(`[SCAN] Upsert error for ${messageId}:`, upsertError);
+          errorCount++;
         } else {
-          console.log(`[SCAN] Creating new premium for message ${messageId}`);
-          const { error: insertError } = await supabase.from("insurance_premiums").insert(premiumData);
-
-          if (insertError) {
-            console.error(`[SCAN] Insert error for ${messageId}:`, insertError);
-            errorCount++;
-          } else {
-            savedCount++;
-          }
+          savedCount++;
+          console.log(`[SCAN] ✅ Successfully upserted message ${messageId}`);
         }
       } catch (err) {
         console.error(`[SCAN] Error processing message ${messageId}:`, err);
