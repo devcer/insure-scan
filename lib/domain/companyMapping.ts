@@ -7,19 +7,26 @@
 export function extractFullDomainFromEmail(email: string): string {
   try {
     // Extract email from angle brackets if present: "Display Name" <email@domain.com>
-    const emailMatch = email.match(/<(.+?)>/);
-    const cleanEmail = emailMatch ? emailMatch[1] : email;
+    const emailMatch = email.match(/<([^>]+)>/);
+    const cleanEmail = emailMatch ? emailMatch[1].trim() : email.trim();
 
-    const domain = cleanEmail.split("@")[1]?.toLowerCase();
-    return domain || "unknown";
-  } catch {
+    const domain = cleanEmail.split("@")[1]?.toLowerCase().trim();
+
+    if (!domain) {
+      console.log(`[DOMAIN] ⚠️ Could not extract domain from: ${email}`);
+      return "unknown";
+    }
+
+    console.log(`[DOMAIN] 🔍 Extracted domain: ${domain} from: ${email}`);
+    return domain;
+  } catch (error) {
+    console.error(`[DOMAIN] ❌ Error extracting domain from ${email}:`, error);
     return "unknown";
   }
 }
 
 /**
- * List of known aggregator/broker domains
- * Emails from these domains should be marked as "Unknown"
+ * Aggregator domains that should return "Unknown" for company name
  */
 const AGGREGATOR_DOMAINS = [
   "policybazaar.com",
