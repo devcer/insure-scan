@@ -41,10 +41,19 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const status = url.searchParams.get("status");
     const search = url.searchParams.get("search");
+    const showArchived = url.searchParams.get("archived");
 
     // Build Supabase query
-    console.log("[PREMIUMS] Building query with filters:", { status, search });
+    console.log("[PREMIUMS] Building query with filters:", { status, search, showArchived });
     let query = supabase.from("insurance_premiums").select("*").eq("user_id", userId).order("received_at", { ascending: false });
+
+    // Apply archived filter (default: show only non-archived)
+    if (showArchived === "only") {
+      query = query.eq("archived", true);
+    } else {
+      // Default: exclude archived policies or where archived is null
+      query = query.or("archived.is.null,archived.eq.false");
+    }
 
     // Apply status filter
     if (status && status !== "ALL") {
