@@ -1,11 +1,16 @@
 /**
  * Extract full domain from email address
- * @param email - Email address (e.g., no-reply@starhealth.in)
+ * Handles both plain email (user@domain.com) and RFC 5322 format ("Display Name" <user@domain.com>)
+ * @param email - Email address or full "from" field
  * @returns Full domain (e.g., starhealth.in)
  */
 export function extractFullDomainFromEmail(email: string): string {
   try {
-    const domain = email.split("@")[1]?.toLowerCase();
+    // Extract email from angle brackets if present: "Display Name" <email@domain.com>
+    const emailMatch = email.match(/<(.+?)>/);
+    const cleanEmail = emailMatch ? emailMatch[1] : email;
+
+    const domain = cleanEmail.split("@")[1]?.toLowerCase();
     return domain || "unknown";
   } catch {
     return "unknown";
