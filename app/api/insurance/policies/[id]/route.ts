@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 // PATCH - Update policy or archive/unarchive
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -25,7 +25,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
-    const policyId = params.id;
+    const { id: policyId } = await params;
 
     // Verify policy belongs to user
     const { data: existingPolicy, error: verifyError } = await supabase
@@ -85,7 +85,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 }
 
 // DELETE - Soft delete (archive) policy
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -100,13 +100,16 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     const supabase = createSupabaseServerClient();
 
     // Get user ID
-    const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single() as { data: { id: string } | null; error: any };
+    const { data: user, error: userError } = (await supabase.from("users").select("id").eq("email", userEmail).single()) as {
+      data: { id: string } | null;
+      error: unknown;
+    };
 
     if (userError || !user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const policyId = params.id;
+    const { id: policyId } = await params;
 
     // Archive the policy (soft delete)
     const { error: deleteError } = await supabase
