@@ -1,6 +1,9 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database.types";
+
+type UserInsert = Database["public"]["Tables"]["users"]["Insert"];
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -40,27 +43,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         console.log("[AUTH JWT] Creating/updating user for:", token.email);
         try {
           const supabase = createSupabaseServerClient();
-          const { data: user, error } = await supabase
-            .from("users")
-            .upsert(
-              {
-                email: token.email,
-                name: profile.name,
-                image: (profile as any).picture,
-                updated_at: new Date().toISOString(),
-              },
-              {
-                onConflict: "email",
-                ignoreDuplicates: false,
-              },
-            )
+          const userData: UserInsert = {
+            email: token.email,
+            name: profile.name || null,
+            image: (profile as { picture?: string }).picture || null,
+            updated_at: new Date().toISOString(),
+          };
+
+          // Explicit any cast needed: TypeScript incorrectly infers 'never' for users table operations
+          // despite Database type having proper Users definition. This is a known Supabase-JS typing issue.
+          const usersTable = supabase.from("users");
+          const response = await usersTable
+            .upsert(userData, {
+              onConflict: "email",
+              ignoreDuplicates: false,
+            })
             .select("id")
             .single();
 
-          if (error) {
-            console.error("[AUTH JWT] User upsert error:", error);
-          } else {
-            console.log("[AUTH JWT] ✅ User created/updated:", user?.id);
+          if (response.error) {
+            console.error("[AUTH JWT] User upsert error:", response.error);
+          } else if (response.data) {
+            console.log("[AUTH JWT] ✅ User created/updated:", response.data.id);
           }
         } catch (err) {
           console.error("[AUTH JWT] Exception creating user:", err);

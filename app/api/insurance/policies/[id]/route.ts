@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/auth";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+import { auth } from "@/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 // PATCH - Update policy or archive/unarchive
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -17,6 +14,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (!userEmail) {
       return NextResponse.json({ error: "User email not found" }, { status: 400 });
     }
+
+    const supabase = createSupabaseServerClient();
 
     // Get user ID
     const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single();
@@ -31,7 +30,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     // Verify policy belongs to user
     const { data: existingPolicy, error: verifyError } = await supabase
       .from("insurance_premiums")
-      .select("id")
+      .select("id, insurer_name, policy_number")
       .eq("id", policyId)
       .eq("user_id", user.id)
       .single();
@@ -41,7 +40,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     // Update policy
-    const updateData: any = {};
+    const updateData: {
+      insurer_name?: string;
+      policy_number?: string;
+      amount?: number;
+      due_date?: string;
+      payment_status?: string;
+      email_subject?: string;
+      archived?: boolean;
+      policy_key?: string;
+    } = {};
     if (body.insurer_name !== undefined) updateData.insurer_name = body.insurer_name;
     if (body.policy_number !== undefined) updateData.policy_number = body.policy_number;
     if (body.amount !== undefined) updateData.amount = body.amount;
@@ -79,7 +87,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 // DELETE - Soft delete (archive) policy
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -89,8 +97,10 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ error: "User email not found" }, { status: 400 });
     }
 
+    const supabase = createSupabaseServerClient();
+
     // Get user ID
-    const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single();
+    const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single() as { data: { id: string } | null; error: any };
 
     if (userError || !user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

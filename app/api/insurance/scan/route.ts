@@ -35,7 +35,7 @@ export async function POST() {
 
     // Get user ID from email
     console.log("[SCAN] Looking up user ID for:", userEmail);
-    const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single();
+    const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single() as { data: { id: string } | null; error: any };
 
     if (userError || !user) {
       console.error("[SCAN] User not found:", userError);
@@ -67,7 +67,10 @@ export async function POST() {
     let errorCount = 0;
 
     // Process each message
-    for (const messageId of messageIds) {
+    for (const msgId of messageIds) {
+      const messageId = msgId || '';
+      if (!messageId) continue;
+      
       try {
         console.log(`[SCAN] Processing message ${messageId}...`);
 
@@ -122,7 +125,7 @@ export async function POST() {
         console.log(`[SCAN] Upserting premium for message ${messageId}`);
         const { error: upsertError } = await supabase
           .from("insurance_premiums")
-          .upsert(premiumData, {
+          .upsert(premiumData as any, {
             onConflict: "gmail_message_id",
             ignoreDuplicates: false, // Always update on conflict
           })

@@ -1,19 +1,31 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
-    if (!session || !session.userId) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = createSupabaseServerClient();
+
+    // Get user ID from email
+    const { data: user } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", session.user.email)
+      .single();
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const { data: connection } = await supabase
       .from("gmail_connections")
       .select("email, updated_at")
-      .eq("user_id", session.userId)
+      .eq("user_id", user.id)
       .single();
 
     return NextResponse.json({ connection });
@@ -23,17 +35,28 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const session = await auth();
-    if (!session || !session.userId) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = createSupabaseServerClient();
 
+    // Get user ID from email
+    const { data: user } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", session.user.email)
+      .single();
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     // Delete the connection entirely instead of nullifying fields
-    const { error } = await supabase.from("gmail_connections").delete().eq("user_id", session.userId);
+    const { error } = await supabase.from("gmail_connections").delete().eq("user_id", user.id);
 
     if (error) {
       return NextResponse.json({ error: "Failed to disconnect" }, { status: 500 });

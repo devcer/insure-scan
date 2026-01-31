@@ -28,7 +28,9 @@
  * ```
  */
 
-import { PaymentStatus } from "@/types/database";
+import type { Database } from "@/types/database.types";
+
+type PaymentStatus = Database["public"]["Tables"]["insurance_premiums"]["Row"]["payment_status"];
 import { EmailMetadata } from "@/lib/gmail/decodeMessage";
 
 /**

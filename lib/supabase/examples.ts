@@ -4,7 +4,13 @@
  */
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { GmailConnection, GmailConnectionInsert, InsurancePremium, InsurancePremiumInsert, PaymentStatus } from "@/types/database";
+import type { Database } from "@/types/database.types";
+
+type GmailConnection = Database["public"]["Tables"]["gmail_connections"]["Row"];
+type GmailConnectionInsert = Database["public"]["Tables"]["gmail_connections"]["Insert"];
+type InsurancePremium = Database["public"]["Tables"]["insurance_premiums"]["Row"];
+type InsurancePremiumInsert = Database["public"]["Tables"]["insurance_premiums"]["Insert"];
+type PaymentStatus = Database["public"]["Tables"]["insurance_premiums"]["Row"]["payment_status"];
 
 /**
  * Example: Store Gmail OAuth connection
@@ -14,7 +20,7 @@ export async function storeGmailConnection(
   email: string,
   accessToken: string,
   refreshToken: string,
-  expiryDate: Date
+  expiryDate: Date,
 ): Promise<GmailConnection | null> {
   const supabase = createSupabaseServerClient();
 
@@ -72,7 +78,7 @@ export async function createInsurancePremium(
     subject: string;
     from: string;
     receivedAt: Date;
-  }
+  },
 ): Promise<InsurancePremium | null> {
   const supabase = createSupabaseServerClient();
 
@@ -198,7 +204,7 @@ export async function getPremiumStats(userId: string): Promise<{
       if (premium.amount) acc.totalAmount += Number(premium.amount);
       return acc;
     },
-    { total: 0, pending: 0, paid: 0, overdue: 0, totalAmount: 0 }
+    { total: 0, pending: 0, paid: 0, overdue: 0, totalAmount: 0 },
   );
 
   return stats;

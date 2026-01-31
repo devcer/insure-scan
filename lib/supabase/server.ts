@@ -1,12 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
-import { Database } from "@/types/database";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database.types";
 
 /**
  * Create a Supabase client for server-side usage
  * This client uses the service role key and bypasses Row Level Security (RLS)
  * Use with caution and only in server-side contexts
  */
-export function createSupabaseServerClient() {
+export function createSupabaseServerClient(): SupabaseClient<Database> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -27,13 +27,13 @@ export function createSupabaseServerClient() {
  * This client respects Row Level Security (RLS) policies
  * Use this for operations that should be scoped to the authenticated user
  */
-export function createSupabaseServerClientWithAnonKey() {
+export function createSupabaseServerClientWithAnonKey(): SupabaseClient<Database> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
-      "Missing Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set."
+      "Missing Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.",
     );
   }
 

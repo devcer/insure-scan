@@ -52,6 +52,43 @@ export interface GmailConnectionUpdate {
 }
 
 /**
+ * User Record
+ * Stores authenticated user information
+ */
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * User Insert Type
+ * Used when creating new users
+ */
+export interface UserInsert {
+  id?: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * User Update Type
+ * Used when updating existing users
+ */
+export interface UserUpdate {
+  email?: string;
+  name?: string | null;
+  image?: string | null;
+  updated_at?: string;
+}
+
+/**
  * Payment Status Enum
  */
 export type PaymentStatus = "UNKNOWN" | "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
@@ -133,6 +170,11 @@ export interface InsurancePremiumUpdate {
 export interface Database {
   public: {
     Tables: {
+      users: {
+        Row: User;
+        Insert: UserInsert;
+        Update: UserUpdate;
+      };
       gmail_connections: {
         Row: GmailConnection;
         Insert: GmailConnectionInsert;

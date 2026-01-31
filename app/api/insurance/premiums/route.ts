@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { listInsuranceEmails, getEmailMessage, isGmailApiError } from "@/lib/gmail/gmailClient";
-import { extractEmailMetadata } from "@/lib/gmail/decodeMessage";
-import { INSURANCE_QUERY } from "@/lib/gmail/gmailQuery";
 
 export async function GET(request: Request) {
   try {
@@ -23,7 +20,7 @@ export async function GET(request: Request) {
     }
 
     const supabase = createSupabaseServerClient();
-    const { accessToken, userEmail } = session;
+    const { userEmail } = session;
 
     // Get user ID from email
     console.log("[PREMIUMS] Looking up user ID for:", userEmail);

@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/auth";
-import { createClient } from "@supabase/supabase-js";
-import { getCompanyNameFromEmail } from "@/lib/domain/companyMapping";
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+import { auth } from "@/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 // POST - Create new policy
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -18,6 +14,8 @@ export async function POST(request: Request) {
     if (!userEmail) {
       return NextResponse.json({ error: "User email not found" }, { status: 400 });
     }
+
+    const supabase = createSupabaseServerClient();
 
     // Get user ID
     const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single();
@@ -37,6 +35,7 @@ export async function POST(request: Request) {
       .from("insurance_premiums")
       .insert({
         user_id: user.id,
+        gmail_message_id: `manual-${Date.now()}`, // Manual entries get a unique ID
         insurer_name,
         policy_number,
         amount,
