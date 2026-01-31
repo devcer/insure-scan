@@ -47,16 +47,32 @@ export async function GET() {
     const userId = user.id;
     console.log("[DASHBOARD] ✅ Found user ID:", userId);
 
-    // Query 1: Count active policies (unique policy_keys, not archived)
-    const { count: activePoliciesCount, error: policiesError } = await supabase
+    // Query 1: Count distinct active policies (unique policy_keys, not archived)
+    const { data: allPolicies, error: policiesError } = await supabase
       .from("insurance_premiums")
-      .select("policy_key", { count: "exact", head: true })
+      .select("policy_key, policy_number, amount, due_date")
       .eq("user_id", userId)
       .or("archived.is.null,archived.eq.false");
 
     if (policiesError) {
       console.error("[DASHBOARD] Error counting policies:", policiesError);
     }
+
+    // Count distinct policy_keys
+    const uniquePolicyKeys = new Set((allPolicies || []).map((p) => p.policy_key));
+    const activePoliciesCount = uniquePolicyKeys.size;
+
+    // Calculate data quality: % of policies with complete data (policy_number, amount, due_date)
+    const policiesWithCompleteData = (allPolicies || []).filter((p) => p.policy_number && p.amount && p.due_date).length;
+    const dataQualityPercentage =
+      allPolicies && allPolicies.length > 0 ? Math.round((policiesWithCompleteData / allPolicies.length) * 100) : 0;
+
+    console.log("[DASHBOARD] Policy stats:", {
+      totalRows: allPolicies?.length || 0,
+      uniquePolicies: activePoliciesCount,
+      completeData: policiesWithCompleteData,
+      qualityPercentage: dataQualityPercentage,
+    });
 
     // Query 2: Upcoming premiums (due in next 60 days, not paid)
     const today = new Date();
@@ -121,8 +137,11 @@ export async function GET() {
 
     const dashboardData = {
       activePoliciesCount: activePoliciesCount || 0,
+      totalPolicyRows: allPolicies?.length || 0,
       upcomingPremiumsCount: upcomingPremiums?.length || 0,
       totalDueAmountNext30Days: Math.round(totalDueAmountNext30Days),
+      dataQualityPercentage,
+      policiesWithCompleteData,
       lastScanAt: lastScan?.created_at || null,
       upcomingPremiums: upcomingPremiums || [],
       paidHistory: paidHistory || [],
@@ -130,8 +149,10 @@ export async function GET() {
 
     console.log("[DASHBOARD] Returning data:", {
       activePoliciesCount: dashboardData.activePoliciesCount,
+      totalRows: dashboardData.totalPolicyRows,
       upcomingPremiumsCount: dashboardData.upcomingPremiumsCount,
       totalDue: dashboardData.totalDueAmountNext30Days,
+      dataQuality: `${dashboardData.dataQualityPercentage}%`,
     });
 
     return NextResponse.json(dashboardData);

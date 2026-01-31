@@ -5,8 +5,11 @@ import { useEffect, useState } from "react";
 
 interface DashboardData {
   activePoliciesCount: number;
+  totalPolicyRows: number;
   upcomingPremiumsCount: number;
   totalDueAmountNext30Days: number;
+  dataQualityPercentage: number;
+  policiesWithCompleteData: number;
   lastScanAt: string | null;
   upcomingPremiums: any[];
   paidHistory: any[];
@@ -88,8 +91,8 @@ export default function DashboardPage() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-pulse">
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-4"></div>
               <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
@@ -97,16 +100,19 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Active Policies
+                Unique Policies
               </h3>
               <div className="text-3xl">📋</div>
             </div>
             <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {data?.activePoliciesCount || 0}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {data?.totalPolicyRows || 0} total emails
             </p>
           </div>
 
@@ -120,6 +126,9 @@ export default function DashboardPage() {
             <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {data?.upcomingPremiumsCount || 0}
             </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Next 60 days
+            </p>
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -131,6 +140,24 @@ export default function DashboardPage() {
             </div>
             <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               ₹{data?.totalDueAmountNext30Days?.toLocaleString('en-IN') || 0}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Total pending
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Data Quality
+              </h3>
+              <div className="text-3xl">✨</div>
+            </div>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              {data?.dataQualityPercentage || 0}%
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {data?.policiesWithCompleteData || 0} complete records
             </p>
           </div>
         </div>
