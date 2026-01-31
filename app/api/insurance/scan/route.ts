@@ -5,6 +5,7 @@ import { listInsuranceEmails, getEmailMessage, isGmailApiError } from "@/lib/gma
 import { extractEmailMetadata, decodeMessage } from "@/lib/gmail/decodeMessage";
 import { INSURANCE_QUERY } from "@/lib/gmail/gmailQuery";
 import { getCompanyNameFromEmail } from "@/lib/domain/companyMapping";
+import { parseInsuranceEmail } from "@/lib/parsers/insurance";
 
 export async function POST() {
   try {
@@ -35,7 +36,10 @@ export async function POST() {
 
     // Get user ID from email
     console.log("[SCAN] Looking up user ID for:", userEmail);
-    const { data: user, error: userError } = await supabase.from("users").select("id").eq("email", userEmail).single() as { data: { id: string } | null; error: any };
+    const { data: user, error: userError } = (await supabase.from("users").select("id").eq("email", userEmail).single()) as {
+      data: { id: string } | null;
+      error: unknown;
+    };
 
     if (userError || !user) {
       console.error("[SCAN] User not found:", userError);
@@ -50,7 +54,7 @@ export async function POST() {
     const listResponse = await listInsuranceEmails({
       accessToken,
       query: INSURANCE_QUERY,
-      maxResults: 100,
+      maxResults: 10,
     });
 
     if (isGmailApiError(listResponse)) {
@@ -68,9 +72,9 @@ export async function POST() {
 
     // Process each message
     for (const msgId of messageIds) {
-      const messageId = msgId || '';
+      const messageId = msgId || "";
       if (!messageId) continue;
-      
+
       try {
         console.log(`[SCAN] Processing message ${messageId}...`);
 
@@ -98,26 +102,41 @@ export async function POST() {
           bodyPreview: body.slice(0, 100) + "...",
         });
 
-        // Map email to company name with logging
+        // Parse insurance data using regex extraction
+        console.log(`[SCAN] 🔍 Parsing insurance data from email body...`);
+        const parsedData = parseInsuranceEmail(body, metadata);
+
+        console.log(`[SCAN] 📊 Extracted data:`, {
+          insurer: parsedData.insurerName,
+          policyNumber: parsedData.policyNumber,
+          amount: parsedData.amount,
+          dueDate: parsedData.dueDate,
+          status: parsedData.paymentStatus,
+          confidence: parsedData.confidenceScore,
+        });
+
+        // Map email to company name using domain mapping (more accurate than text parsing)
         const companyName = getCompanyNameFromEmail(metadata.from);
         console.log(`[SCAN] 📧 Email: ${metadata.from} → 🏢 Company: ${companyName}`);
 
-        // Generate policy_key from insurer name and subject
-        const policyKey = `${metadata.from?.toLowerCase()}-${metadata.subject?.toLowerCase()}`.slice(0, 100);
+        // Generate policy_key from insurer name and policy number (if available) or subject
+        const policyKey = parsedData.policyNumber
+          ? `${companyName?.toLowerCase()}-${parsedData.policyNumber}`.slice(0, 100)
+          : `${metadata.from?.toLowerCase()}-${metadata.subject?.toLowerCase()}`.slice(0, 100);
 
         const premiumData = {
           user_id: userId,
           gmail_message_id: messageId,
           policy_key: policyKey,
           insurer_name: companyName,
-          policy_number: null,
-          amount: null,
-          due_date: null,
-          payment_status: "UNKNOWN",
+          policy_number: parsedData.policyNumber,
+          amount: parsedData.amount,
+          due_date: parsedData.dueDate ? parsedData.dueDate.toISOString() : null,
+          payment_status: parsedData.paymentStatus,
           email_subject: metadata.subject,
           from_email: metadata.from,
           received_at: metadata.date || new Date().toISOString(),
-          confidence_score: 0.5,
+          confidence_score: parsedData.confidenceScore,
           raw_preview_text: body.slice(0, 500),
         };
 
