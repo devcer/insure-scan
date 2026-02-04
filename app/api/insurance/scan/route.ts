@@ -54,7 +54,7 @@ export async function POST() {
     const listResponse = await listInsuranceEmails({
       accessToken,
       query: INSURANCE_QUERY,
-      maxResults: 10,
+      maxResults: 1,
     });
 
     if (isGmailApiError(listResponse)) {
@@ -102,18 +102,25 @@ export async function POST() {
           bodyPreview: body.slice(0, 100) + "...",
         });
 
-        // Parse insurance data using regex extraction
+        // Parse insurance data using regex extraction with debug mode enabled
         console.log(`[SCAN] 🔍 Parsing insurance data from email body...`);
-        const parsedData = parseInsuranceEmail(body, metadata);
+        const parsedData = parseInsuranceEmail(body, metadata, true); // Enable debug mode
 
         console.log(`[SCAN] 📊 Extracted data:`, {
           insurer: parsedData.insurerName,
           policyNumber: parsedData.policyNumber,
           amount: parsedData.amount,
+          currency: parsedData.currency,
           dueDate: parsedData.dueDate,
           status: parsedData.paymentStatus,
           confidence: parsedData.confidenceScore,
+          errorCount: parsedData.errors.length,
         });
+
+        // Log parsing errors if any
+        if (parsedData.errors.length > 0) {
+          console.warn(`[SCAN] ⚠️ Parsing errors for message ${messageId}:`, parsedData.errors);
+        }
 
         // Map email to company name using domain mapping (more accurate than text parsing)
         const companyName = getCompanyNameFromEmail(metadata.from);
