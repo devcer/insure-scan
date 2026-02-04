@@ -291,6 +291,9 @@ const POLICY_NUMBER_PATTERNS = [
   { pattern: /\b([0-9]{10,15})\b/, confidence: 0.6 }, // Pure numeric policies
   { pattern: /ref\s*(?:no|number)?\s*:?\s*([A-Z0-9\/-]{6,20})/i, confidence: 0.65 },
   { pattern: /application\s*(?:no|number)?\s*:?\s*([A-Z0-9\/-]{6,20})/i, confidence: 0.6 },
+  // Handle masked policy numbers like XXXXXXX0902
+  { pattern: /(?:policy|certificate).*?([X]{4,}[A-Z0-9]{3,8})/i, confidence: 0.5 },
+  { pattern: /([X]{4,}[A-Z0-9]{3,8})/g, confidence: 0.4 }, // Generic masked pattern
 ];
 
 /**
@@ -330,6 +333,11 @@ const DUE_DATE_PATTERNS = [
   { pattern: /(?:expires?|expiry)\s*:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i, confidence: 0.8 },
   { pattern: /(?:valid\s*till|valid\s*until)\s*:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i, confidence: 0.75 },
   { pattern: /(?:maturity|maturity\s*date)\s*:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i, confidence: 0.7 },
+  // Additional patterns for renewal emails
+  { pattern: /renewal.*?(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i, confidence: 0.65 },
+  { pattern: /next\s*(?:payment|premium).*?(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i, confidence: 0.6 },
+  // Handle dates in different formats
+  { pattern: /(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/, confidence: 0.5 }, // Generic date pattern
 ];
 
 /**
@@ -442,8 +450,8 @@ export const parsingLogger = ParsingLogger.getInstance();
  * Payment status keywords
  */
 const PAYMENT_STATUS_KEYWORDS = {
-  pending: ["due", "pending", "unpaid", "payment required", "pay now", "outstanding"],
-  paid: ["paid", "payment received", "thank you for payment", "payment successful", "confirmed"],
+  paid: ["paid", "payment received", "thank you for payment", "payment successful", "confirmed", "receipt"],
+  pending: ["due", "pending", "unpaid", "payment required", "pay now", "outstanding", "renewal"],
   overdue: ["overdue", "late", "lapsed", "expired", "grace period"],
   cancelled: ["cancelled", "canceled", "terminated", "lapsed"],
 };

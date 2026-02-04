@@ -54,7 +54,7 @@ export async function POST() {
     const listResponse = await listInsuranceEmails({
       accessToken,
       query: INSURANCE_QUERY,
-      maxResults: 1,
+      maxResults: 100,
     });
 
     if (isGmailApiError(listResponse)) {
@@ -69,6 +69,7 @@ export async function POST() {
     let savedCount = 0;
     const updatedCount = 0;
     let errorCount = 0;
+    let skippedCount = 0;
 
     // Process each message
     for (const msgId of messageIds) {
@@ -126,10 +127,44 @@ export async function POST() {
         const companyName = getCompanyNameFromEmail(metadata.from);
         console.log(`[SCAN] 📧 Email: ${metadata.from} → 🏢 Company: ${companyName}`);
 
-        // Generate policy_key from insurer name and policy number (if available) or subject
-        const policyKey = parsedData.policyNumber
-          ? `${companyName?.toLowerCase()}-${parsedData.policyNumber}`.slice(0, 100)
-          : `${metadata.from?.toLowerCase()}-${metadata.subject?.toLowerCase()}`.slice(0, 100);
+        // Generate a stable policy_key for deduplication
+        // Priority: 1) Company + Policy Number, 2) Company + Email pattern, 3) Fallback to message ID
+        let policyKey: string;
+        
+        if (parsedData.policyNumber && companyName) {
+          // Best case: we have both company and policy number
+          policyKey = `${companyName.toLowerCase().replace(/\s+/g, '-')}-${parsedData.policyNumber}`;
+        } else if (companyName) {
+          // Extract a stable identifier from email domain + any policy reference in subject
+          const emailDomain = metadata.from.split('@')[1]?.toLowerCase() || 'unknown';
+          const subjectPolicyRef = metadata.subject?.match(/policy\s*([A-Z0-9X]{4,})/i)?.[1] || '';
+          
+          if (subjectPolicyRef) {
+            policyKey = `${companyName.toLowerCase().replace(/\s+/g, '-')}-${subjectPolicyRef}`;
+          } else {
+            // Use domain + a hash of the sender email for consistency
+            const emailHash = metadata.from.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10);
+            policyKey = `${companyName.toLowerCase().replace(/\s+/g, '-')}-${emailHash}`;
+          }
+        } else {
+          // Fallback: use message ID (this will create unique entries, but better than crashes)
+          policyKey = `unknown-${messageId}`;
+        }
+        
+        // Ensure policy key is within database limits
+        policyKey = policyKey.slice(0, 100);
+        
+        console.log(`[SCAN] 🔑 Generated policy key: ${policyKey}`);
+
+        // Map payment status to database format (uppercase)
+        const paymentStatusMap: Record<string, string> = {
+          'paid': 'PAID',
+          'pending': 'PENDING', 
+          'overdue': 'OVERDUE',
+          'cancelled': 'CANCELLED'
+        };
+        
+        const dbPaymentStatus = paymentStatusMap[parsedData.paymentStatus] || 'UNKNOWN';
 
         const premiumData = {
           user_id: userId,
@@ -139,7 +174,7 @@ export async function POST() {
           policy_number: parsedData.policyNumber,
           amount: parsedData.amount,
           due_date: parsedData.dueDate ? parsedData.dueDate.toISOString() : null,
-          payment_status: parsedData.paymentStatus,
+          payment_status: dbPaymentStatus, // Use mapped uppercase status
           email_subject: metadata.subject,
           from_email: metadata.from,
           received_at: metadata.date || new Date().toISOString(),
@@ -147,22 +182,77 @@ export async function POST() {
           raw_preview_text: body.slice(0, 500),
         };
 
-        // Use upsert to insert or update in a single atomic operation
-        console.log(`[SCAN] Upserting premium for message ${messageId}`);
-        const { error: upsertError } = await supabase
+        // Check for existing policy with same policy_key to avoid duplicates
+        console.log(`[SCAN] 🔍 Checking for existing policy with key: ${policyKey}`);
+        const { data: existingPolicy, error: checkError } = await supabase
           .from("insurance_premiums")
-          .upsert(premiumData as any, {
-            onConflict: "gmail_message_id",
-            ignoreDuplicates: false, // Always update on conflict
-          })
-          .select("id");
+          .select("id, gmail_message_id, confidence_score, received_at")
+          .eq("user_id", userId)
+          .eq("policy_key", policyKey)
+          .single();
 
-        if (upsertError) {
-          console.error(`[SCAN] Upsert error for ${messageId}:`, upsertError);
-          errorCount++;
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows found
+          console.error(`[SCAN] Error checking for existing policy:`, checkError);
+        }
+
+        let shouldUpdate = true;
+        let updateReason = "new_policy";
+
+        if (existingPolicy) {
+          console.log(`[SCAN] 📋 Found existing policy:`, {
+            id: existingPolicy.id,
+            existingMessageId: existingPolicy.gmail_message_id,
+            currentMessageId: messageId,
+            existingConfidence: existingPolicy.confidence_score,
+            currentConfidence: parsedData.confidenceScore,
+          });
+
+          // Decide whether to update based on confidence and recency
+          const existingDate = new Date(existingPolicy.received_at || 0);
+          const currentDate = new Date(metadata.date || new Date());
+          const isNewer = currentDate > existingDate;
+          const isBetterConfidence = parsedData.confidenceScore > (existingPolicy.confidence_score || 0);
+          const isSameMessage = existingPolicy.gmail_message_id === messageId;
+
+          if (isSameMessage) {
+            updateReason = "same_message";
+            shouldUpdate = true;
+          } else if (isBetterConfidence) {
+            updateReason = "better_confidence";
+            shouldUpdate = true;
+          } else if (isNewer && parsedData.confidenceScore >= 0.6) {
+            updateReason = "newer_with_good_confidence";
+            shouldUpdate = true;
+          } else {
+            updateReason = "keeping_existing";
+            shouldUpdate = false;
+          }
+
+          console.log(`[SCAN] 🤔 Update decision: ${updateReason} (shouldUpdate: ${shouldUpdate})`);
+        }
+
+        if (shouldUpdate) {
+          // Use upsert to insert or update in a single atomic operation
+          console.log(`[SCAN] 💾 Upserting premium for message ${messageId} (reason: ${updateReason})`);
+          const { error: upsertError } = await supabase
+            .from("insurance_premiums")
+            .upsert(premiumData as any, {
+              onConflict: "gmail_message_id",
+              ignoreDuplicates: false, // Always update on conflict
+            })
+            .select("id");
+
+          if (upsertError) {
+            console.error(`[SCAN] Upsert error for ${messageId}:`, upsertError);
+            errorCount++;
+          } else {
+            savedCount++;
+            console.log(`[SCAN] ✅ Successfully upserted message ${messageId}`);
+          }
         } else {
-          savedCount++;
-          console.log(`[SCAN] ✅ Successfully upserted message ${messageId}`);
+          console.log(`[SCAN] ⏭️ Skipping message ${messageId} - keeping existing policy`);
+          skippedCount++;
+          // Don't increment error count, this is intentional
         }
       } catch (err) {
         console.error(`[SCAN] Error processing message ${messageId}:`, err);
@@ -171,13 +261,14 @@ export async function POST() {
       }
     }
 
-    console.log("[SCAN] ✅ Scan complete", { savedCount, updatedCount, errorCount });
+    console.log("[SCAN] ✅ Scan complete", { savedCount, updatedCount, errorCount, skippedCount });
     return NextResponse.json({
       success: true,
       messageCount: messageIds.length,
       savedCount,
       updatedCount,
       errorCount,
+      skippedCount,
     });
   } catch (error) {
     console.error("[SCAN] Error:", error);
