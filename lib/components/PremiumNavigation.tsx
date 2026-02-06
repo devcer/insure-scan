@@ -75,22 +75,22 @@ export interface PremiumNavigationProps {
 const defaultNavigationItems: NavigationItem[] = [
   {
     label: 'Dashboard',
-    href: '/insurance/dashboard',
+    href: '/dashboard',
     icon: DashboardIcon,
   },
   {
     label: 'Policies',
-    href: '/insurance/policies',
+    href: '/policies',
     icon: PoliciesIcon,
   },
   {
     label: 'Emails',
-    href: '/insurance/emails',
+    href: '/emails',
     icon: EmailsIcon,
   },
   {
     label: 'Settings',
-    href: '/insurance/settings',
+    href: '/settings',
     icon: SettingsIcon,
   },
 ];

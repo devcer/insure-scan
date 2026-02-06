@@ -2,7 +2,7 @@
 
 import { PremiumLayout } from "../../lib/components/PremiumLayout";
 
-export default function InsuranceLayout({
+export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -11,11 +11,10 @@ export default function InsuranceLayout({
     <PremiumLayout
       showBreadcrumb={true}
       breadcrumbPathMap={{
-        '/insurance': 'Insurance',
-        '/insurance/dashboard': 'Dashboard',
-        '/insurance/policies': 'Policies',
-        '/insurance/emails': 'Emails',
-        '/insurance/settings': 'Settings',
+        '/dashboard': 'Dashboard',
+        '/policies': 'Policies',
+        '/emails': 'Emails',
+        '/settings': 'Settings',
       }}
     >
       {children}

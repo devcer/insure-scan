@@ -2,8 +2,8 @@
 
 import React from "react";
 import { useSession } from "next-auth/react";
-import { DashboardStatsCard, PremiumButton, RefreshIcon, SpinnerIcon, PolicyIcon, BellIcon, CurrencyIcon, SparklesIcon, PolicyGrid } from "../../../lib/components";
-import { useDashboardStats, usePolicies } from "../../../lib/hooks";
+import { DashboardStatsCard, PremiumButton, RefreshIcon, SpinnerIcon, PolicyIcon, BellIcon, CurrencyIcon, SparklesIcon, PolicyGrid } from "../../lib/components";
+import { useDashboardStats, usePolicies } from "../../lib/hooks";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -276,7 +276,7 @@ export default function DashboardPage() {
             Recent Policies
           </h2>
           <a
-            href="/insurance/policies"
+            href="/policies"
             className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
           >
             View All →

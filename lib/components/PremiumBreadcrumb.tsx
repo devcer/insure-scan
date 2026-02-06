@@ -55,11 +55,10 @@ export const useBreadcrumbFromPath = (
   const pathname = usePathname();
 
   const defaultPathMap = {
-    '/insurance': 'Insurance',
-    '/insurance/dashboard': 'Dashboard',
-    '/insurance/policies': 'Policies',
-    '/insurance/emails': 'Emails',
-    '/insurance/settings': 'Settings',
+    '/dashboard': 'Dashboard',
+    '/policies': 'Policies',
+    '/emails': 'Emails',
+    '/settings': 'Settings',
   };
 
   const combinedPathMap: Record<string, string> = { ...defaultPathMap, ...pathMap };
@@ -70,7 +69,7 @@ export const useBreadcrumbFromPath = (
   // Add home/root item
   items.push({
     label: 'Home',
-    href: '/insurance/dashboard',
+    href: '/dashboard',
     icon: HomeIcon,
   });
 

@@ -32,7 +32,7 @@ export function PremiumLandingPage() {
   ];
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/insurance/dashboard' });
+    signIn('google', { callbackUrl: '/dashboard' });
   };
 
   useEffect(() => {

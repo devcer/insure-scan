@@ -9,7 +9,7 @@ export async function proxy(request: NextRequest) {
 
   // Redirect authenticated users from public pages to dashboard
   if (isLoggedIn && (pathname === "/" || pathname === "/login")) {
-    return NextResponse.redirect(new URL("/insurance/dashboard", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Redirect unauthenticated users from protected pages to login
