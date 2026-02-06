@@ -1,60 +1,30 @@
 "use client";
 
+import React from "react";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-
-interface DashboardData {
-  activePoliciesCount: number;
-  totalPolicyRows: number;
-  upcomingPremiumsCount: number;
-  totalDueAmountNext30Days: number;
-  dataQualityPercentage: number;
-  policiesWithCompleteData: number;
-  lastScanAt: string | null;
-  upcomingPremiums: any[];
-  paidHistory: any[];
-}
+import { DashboardStatsCard, PremiumButton, RefreshIcon, SpinnerIcon, PolicyIcon, BellIcon, CurrencyIcon, SparklesIcon, PolicyGrid } from "../../../lib/components";
+import { useDashboardStats, usePolicies } from "../../../lib/hooks";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [scanning, setScanning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data,
+    loading,
+    error,
+    scanning,
+    handleScan,
+    getStatStatus,
+    getHoverDetails,
+  } = useDashboardStats();
 
-  const fetchDashboard = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/insurance/dashboard");
-      if (!response.ok) throw new Error("Failed to fetch dashboard");
-      const result = await response.json();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Get recent policies for dashboard display
+  const {
+    policies: allPolicies,
+    loading: policiesLoading,
+    getRecentPolicies,
+  } = usePolicies({ limit: 6 });
 
-  const handleScan = async () => {
-    try {
-      setScanning(true);
-      setError(null);
-      const response = await fetch("/api/insurance/scan", { method: "POST" });
-      if (!response.ok) throw new Error("Failed to scan emails");
-      const result = await response.json();
-      alert(`Scanned ${result.scannedCount} emails. Saved: ${result.savedCount}, Updated: ${result.updatedCount}`);
-      await fetchDashboard();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Scan failed");
-    } finally {
-      setScanning(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
+  const recentPolicies = getRecentPolicies(6);
 
   const getDaysUntilDue = (dueDate: string) => {
     const due = new Date(dueDate);
@@ -65,7 +35,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
+      {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -75,129 +46,151 @@ export default function DashboardPage() {
             Welcome back, {session?.user?.name || "User"}!
           </p>
         </div>
-        <button
+        <PremiumButton
+          variant="glass"
           onClick={handleScan}
           disabled={scanning}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          loading={scanning}
+          icon={scanning ? SpinnerIcon : RefreshIcon}
+          glow={true}
         >
           {scanning ? "Scanning..." : "Scan Now"}
-        </button>
+        </PremiumButton>
       </div>
 
+      {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
-          {error}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-4"></div>
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Unique Policies
-              </h3>
-              <div className="text-3xl">📋</div>
-            </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {data?.activePoliciesCount || 0}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {data?.totalPolicyRows || 0} total emails
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Upcoming Premiums
-              </h3>
-              <div className="text-3xl">🔔</div>
-            </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {data?.upcomingPremiumsCount || 0}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Next 60 days
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Due Next 30 Days
-              </h3>
-              <div className="text-3xl">💰</div>
-            </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              ₹{data?.totalDueAmountNext30Days?.toLocaleString('en-IN') || 0}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Total pending
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Data Quality
-              </h3>
-              <div className="text-3xl">✨</div>
-            </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {data?.dataQualityPercentage || 0}%
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {data?.policiesWithCompleteData || 0} complete records
-            </p>
+        <div className="mb-6 p-4 glass border-error-200 dark:border-error-800 rounded-xl text-error-700 dark:text-error-400 animate-slide-in-down">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-error-500 rounded-full"></div>
+            {error}
           </div>
         </div>
       )}
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <DashboardStatsCard
+          title="Unique Policies"
+          value={data?.activePoliciesCount || 0}
+          subtitle={`${data?.totalPolicyRows || 0} total emails`}
+          icon={PolicyIcon}
+          status={data ? getStatStatus('activePoliciesCount', data.activePoliciesCount) : 'default'}
+          hoverDetails={data ? getHoverDetails('activePoliciesCount', data) : undefined}
+          loading={loading}
+          className="animate-slide-in-up"
+          style={{ animationDelay: '0ms' } as React.CSSProperties}
+        />
+
+        <DashboardStatsCard
+          title="Upcoming Premiums"
+          value={data?.upcomingPremiumsCount || 0}
+          subtitle="Next 60 days"
+          icon={BellIcon}
+          status={data ? getStatStatus('upcomingPremiumsCount', data.upcomingPremiumsCount) : 'default'}
+          hoverDetails={data ? getHoverDetails('upcomingPremiumsCount', data) : undefined}
+          loading={loading}
+          className="animate-slide-in-up"
+          style={{ animationDelay: '100ms' } as React.CSSProperties}
+        />
+
+        <DashboardStatsCard
+          title="Due Next 30 Days"
+          value={data?.totalDueAmountNext30Days || 0}
+          subtitle="Total pending"
+          icon={CurrencyIcon}
+          status={data ? getStatStatus('totalDueAmountNext30Days', data.totalDueAmountNext30Days) : 'default'}
+          hoverDetails={data ? getHoverDetails('totalDueAmountNext30Days', data) : undefined}
+          currency={true}
+          loading={loading}
+          className="animate-slide-in-up"
+          style={{ animationDelay: '200ms' } as React.CSSProperties}
+        />
+
+        <DashboardStatsCard
+          title="Data Quality"
+          value={data?.dataQualityPercentage || 0}
+          subtitle={`${data?.policiesWithCompleteData || 0} complete records`}
+          icon={SparklesIcon}
+          status={data ? getStatStatus('dataQualityPercentage', data.dataQualityPercentage) : 'default'}
+          hoverDetails={data ? getHoverDetails('dataQualityPercentage', data) : undefined}
+          percentage={true}
+          loading={loading}
+          className="animate-slide-in-up"
+          style={{ animationDelay: '300ms' } as React.CSSProperties}
+        />
+      </div>
+
+      {/* Last Scan Info */}
       {data?.lastScanAt && (
-        <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mb-8 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+          <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
           Last scanned: {new Date(data.lastScanAt).toLocaleString()}
         </p>
       )}
 
       {/* Upcoming Premiums */}
-      <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="mb-8 glass rounded-2xl p-6 animate-slide-in-up" style={{ animationDelay: '400ms' } as React.CSSProperties}>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+          <div className="p-2 bg-warning-100 dark:bg-warning-900/20 rounded-xl">
+            <BellIcon className="w-5 h-5 text-warning-600 dark:text-warning-400" />
+          </div>
           Upcoming Premiums
         </h2>
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
+                <div className="h-16 glass rounded-xl"></div>
               </div>
             ))}
           </div>
         ) : data?.upcomingPremiums && data.upcomingPremiums.length > 0 ? (
           <div className="space-y-3">
-            {data.upcomingPremiums.map((premium) => {
+            {data.upcomingPremiums.map((premium, index) => {
               const daysUntil = getDaysUntilDue(premium.due_date);
               const isOverdue = daysUntil < 0;
+              const isUrgent = daysUntil <= 7 && daysUntil >= 0;
+
               return (
-                <div key={premium.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{premium.insurer_name}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{premium.policy_number || 'No policy number'}</p>
+                <div
+                  key={premium.id}
+                  className={`
+                    flex justify-between items-center p-4 rounded-xl transition-all duration-300 hover:scale-[1.01]
+                    ${isOverdue
+                      ? 'bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                      : isUrgent
+                        ? 'bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                        : 'glass hover:shadow-premium'
+                    }
+                  `}
+                  style={{ animationDelay: `${500 + index * 100}ms` } as React.CSSProperties}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`
+                      w-3 h-3 rounded-full
+                      ${isOverdue
+                        ? 'bg-error-500 animate-pulse'
+                        : isUrgent
+                          ? 'bg-warning-500 animate-pulse'
+                          : 'bg-info-500'
+                      }
+                    `} />
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{premium.insurer_name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{premium.policy_number || 'No policy number'}</p>
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900 dark:text-white">
                       ₹{Number(premium.amount || 0).toLocaleString('en-IN')}
                     </p>
-                    <p className={`text-sm ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                    <p className={`text-sm font-medium ${isOverdue
+                      ? 'text-error-600 dark:text-error-400'
+                      : isUrgent
+                        ? 'text-warning-600 dark:text-warning-400'
+                        : 'text-info-600 dark:text-info-400'
+                      }`}>
                       {isOverdue ? `Overdue by ${Math.abs(daysUntil)} days` : `Due in ${daysUntil} days`}
                     </p>
                   </div>
@@ -206,47 +199,96 @@ export default function DashboardPage() {
             })}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400">No upcoming premiums</p>
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-success-100 dark:bg-success-900/20 rounded-full flex items-center justify-center">
+              <SparklesIcon className="w-8 h-8 text-success-600 dark:text-success-400" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No upcoming premiums</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">You're all caught up!</p>
+          </div>
         )}
       </div>
 
-      {/* Paid History */}
-      <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      {/* Recent Payments */}
+      <div className="glass rounded-2xl p-6 animate-slide-in-up" style={{ animationDelay: '500ms' } as React.CSSProperties}>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+          <div className="p-2 bg-success-100 dark:bg-success-900/20 rounded-xl">
+            <SparklesIcon className="w-5 h-5 text-success-600 dark:text-success-400" />
+          </div>
           Recent Payments
         </h2>
         {loading ? (
           <div className="space-y-3">
             {[1, 2].map((i) => (
               <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
+                <div className="h-16 glass rounded-xl"></div>
               </div>
             ))}
           </div>
         ) : data?.paidHistory && data.paidHistory.length > 0 ? (
           <div className="space-y-3">
-            {data.paidHistory.map((premium) => (
-              <div key={premium.id} className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded">
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{premium.insurer_name}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(premium.received_at).toLocaleDateString()}
-                  </p>
+            {data.paidHistory.map((premium, index) => (
+              <div
+                key={premium.id}
+                className="flex justify-between items-center p-4 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-xl transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                style={{ animationDelay: `${600 + index * 100}ms` } as React.CSSProperties}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-3 h-3 bg-success-500 rounded-full" />
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">{premium.insurer_name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(premium.received_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    ₹{Number(premium.amount || 0).toLocaleString('en-IN')}
-                  </p>
-                  <span className="text-xs px-2 py-1 bg-green-200 dark:bg-green-700 text-green-800 dark:text-green-200 rounded">
-                    PAID
-                  </span>
+                <div className="text-right flex items-center gap-3">
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      ₹{Number(premium.amount || 0).toLocaleString('en-IN')}
+                    </p>
+                    <span className="text-xs px-2 py-1 bg-success-200 dark:bg-success-700 text-success-800 dark:text-success-200 rounded-full font-medium">
+                      PAID
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400">No payment history</p>
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              <CurrencyIcon className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No payment history</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Payments will appear here once processed</p>
+          </div>
         )}
+      </div>
+
+      {/* Recent Policies */}
+      <div className="mt-8 glass rounded-2xl p-6 animate-slide-in-up" style={{ animationDelay: '600ms' } as React.CSSProperties}>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+            <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+              <PolicyIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            </div>
+            Recent Policies
+          </h2>
+          <a
+            href="/insurance/policies"
+            className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+          >
+            View All →
+          </a>
+        </div>
+
+        <PolicyGrid
+          policies={recentPolicies}
+          variant="compact"
+          loading={policiesLoading}
+          className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+        />
       </div>
     </div>
   );

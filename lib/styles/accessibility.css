@@ -1,0 +1,466 @@
+/**
+ * Accessibility Styles for Premium Design System
+ * Provides screen reader utilities, focus indicators, and accessibility enhancements
+ */
+
+/* === Screen Reader Utilities === */
+
+/* Screen reader only content - visually hidden but accessible to screen readers */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Screen reader only content that becomes visible on focus */
+.sr-only:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+}
+
+/* Skip links for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--color-primary-600);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 600;
+  transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* === Focus Indicators === */
+
+/* Base focus styles */
+.focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* === High Contrast Support === */
+
+@media (prefers-contrast: high) {
+  /* Increase border contrast */
+  .glass,
+  .glass-strong {
+    border-width: 2px;
+    border-color: currentColor;
+  }
+
+  /* Enhance focus indicators */
+  *:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  /* Increase text contrast */
+  .text-gray-500 {
+    color: var(--color-gray-700) !important;
+  }
+
+  .text-gray-400 {
+    color: var(--color-gray-600) !important;
+  }
+
+  /* Enhance button contrast */
+  button,
+  .btn {
+    border: 2px solid currentColor;
+  }
+
+  /* Enhance card borders */
+  .card,
+  .premium-card {
+    border: 2px solid var(--color-gray-300);
+  }
+}
+
+/* === Dark Mode High Contrast === */
+
+@media (prefers-contrast: high) and (prefers-color-scheme: dark) {
+  .text-gray-400 {
+    color: var(--color-gray-300) !important;
+  }
+
+  .text-gray-500 {
+    color: var(--color-gray-200) !important;
+  }
+
+  .card,
+  .premium-card {
+    border: 2px solid var(--color-gray-600);
+  }
+}
+
+/* === Reduced Motion Support === */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable animations */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Remove transform animations */
+  .hover-scale:hover,
+  .hover-scale-sm:hover {
+    transform: none !important;
+  }
+
+  /* Keep essential transitions for accessibility */
+  *:focus-visible {
+    transition: none;
+  }
+
+  /* Disable parallax and complex animations */
+  .animate-shimmer,
+  .animate-pulse-glow,
+  .animate-float,
+  .animate-bounce-in {
+    animation: none !important;
+  }
+
+  /* Provide alternative feedback for disabled animations */
+  .animate-shimmer {
+    background: var(--color-gray-200);
+  }
+
+  [data-theme="dark"] .animate-shimmer {
+    background: var(--color-gray-700);
+  }
+}
+
+/* === Touch Target Optimization === */
+
+/* Touch-friendly interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  .btn,
+  a[role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+
+  /* Increase spacing between interactive elements */
+  .btn + .btn,
+  button + button {
+    margin-left: 8px;
+  }
+
+  /* Larger tap targets for mobile */
+  .mobile-tap-target {
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
+
+/* === Keyboard Navigation === */
+
+/* Visible focus for keyboard users only */
+.js-focus-visible *:focus:not(.focus-visible) {
+  box-shadow: none;
+  outline: none;
+}
+
+/* Navigation focus indicators */
+nav a:focus-visible,
+nav button:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+/* Modal focus management */
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* === Form Accessibility === */
+
+/* Required field indicators */
+.required::after {
+  content: " *";
+  color: var(--color-error-500);
+  font-weight: bold;
+}
+
+/* Error state styling */
+.field-error {
+  border-color: var(--color-error-500) !important;
+  box-shadow: 0 0 0 1px var(--color-error-500) !important;
+}
+
+.field-error:focus {
+  box-shadow: 
+    0 0 0 1px var(--color-error-500),
+    0 0 0 3px var(--color-error-500, #ef4444)20 !important;
+}
+
+/* Success state styling */
+.field-success {
+  border-color: var(--color-success-500) !important;
+  box-shadow: 0 0 0 1px var(--color-success-500) !important;
+}
+
+/* Help text styling */
+.help-text {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  margin-top: 0.25rem;
+}
+
+.error-text {
+  font-size: 0.875rem;
+  color: var(--color-error-600);
+  margin-top: 0.25rem;
+}
+
+[data-theme="dark"] .help-text {
+  color: var(--color-gray-400);
+}
+
+[data-theme="dark"] .error-text {
+  color: var(--color-error-400);
+}
+
+/* === Live Regions === */
+
+.live-region {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* === Color Contrast Utilities === */
+
+/* High contrast text combinations */
+.text-high-contrast {
+  color: var(--color-gray-900);
+}
+
+[data-theme="dark"] .text-high-contrast {
+  color: var(--color-gray-100);
+}
+
+.bg-high-contrast {
+  background-color: var(--color-gray-100);
+}
+
+[data-theme="dark"] .bg-high-contrast {
+  background-color: var(--color-gray-800);
+}
+
+/* Ensure sufficient contrast for interactive elements */
+.interactive-contrast {
+  color: var(--color-gray-900);
+  background-color: var(--color-gray-100);
+  border: 1px solid var(--color-gray-300);
+}
+
+[data-theme="dark"] .interactive-contrast {
+  color: var(--color-gray-100);
+  background-color: var(--color-gray-800);
+  border-color: var(--color-gray-600);
+}
+
+/* === Animation Preferences === */
+
+/* Respect user's animation preferences */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-on-preference {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .transition-on-preference {
+    transition: all 0.2s ease-in-out;
+  }
+}
+
+/* === Print Accessibility === */
+
+@media print {
+  /* Ensure good contrast in print */
+  .glass,
+  .glass-strong {
+    background: white !important;
+    border: 1px solid black !important;
+  }
+
+  /* Show URLs for links */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Hide decorative elements */
+  .print-hidden {
+    display: none !important;
+  }
+
+  /* Ensure text is readable */
+  body {
+    color: black !important;
+    background: white !important;
+  }
+}
+
+/* === Utility Classes === */
+
+/* Accessibility helper classes */
+.a11y-hidden {
+  @apply sr-only;
+}
+
+.a11y-focusable {
+  @apply sr-only;
+}
+
+.a11y-focusable:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+}
+
+.a11y-focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+.a11y-touch-target {
+  @apply min-w-[44px] min-h-[44px];
+}
+
+.a11y-high-contrast {
+  @apply text-gray-900 bg-gray-100 dark:text-gray-100 dark:bg-gray-800;
+}
+
+/* === Component-Specific Accessibility === */
+
+/* Button accessibility */
+.btn-accessible {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-accessible:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 2px var(--color-primary-500),
+    0 0 0 4px var(--color-primary-500, #3b82f6)20;
+}
+
+.btn-accessible:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Card accessibility */
+.card-accessible {
+  position: relative;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-gray-200);
+  background: white;
+  transition: all 0.15s ease-in-out;
+}
+
+.card-accessible:focus-within {
+  box-shadow: 
+    0 0 0 2px var(--color-primary-500),
+    0 0 0 4px var(--color-primary-500, #3b82f6)20;
+}
+
+[data-theme="dark"] .card-accessible {
+  border-color: var(--color-gray-700);
+  background: var(--color-gray-800);
+}
+
+/* Input accessibility */
+.input-accessible {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 0.375rem;
+  background: white;
+  color: var(--color-gray-900);
+  transition: all 0.15s ease-in-out;
+}
+
+.input-accessible:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 
+    0 0 0 1px var(--color-primary-500),
+    0 0 0 3px var(--color-primary-500, #3b82f6)20;
+}
+
+.input-accessible:invalid {
+  border-color: var(--color-error-500);
+}
+
+.input-accessible:invalid:focus {
+  box-shadow: 
+    0 0 0 1px var(--color-error-500),
+    0 0 0 3px var(--color-error-500, #ef4444)20;
+}
+
+[data-theme="dark"] .input-accessible {
+  border-color: var(--color-gray-600);
+  background: var(--color-gray-800);
+  color: var(--color-gray-100);
+}
