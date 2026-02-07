@@ -173,6 +173,7 @@ export async function POST() {
           insurer_name: companyName,
           policy_number: parsedData.policyNumber,
           amount: parsedData.amount,
+          premium_frequency: parsedData.premiumFrequency,
           due_date: parsedData.dueDate ? parsedData.dueDate.toISOString() : null,
           payment_status: dbPaymentStatus, // Use mapped uppercase status
           email_subject: metadata.subject,

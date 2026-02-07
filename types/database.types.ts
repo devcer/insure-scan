@@ -66,6 +66,7 @@ export type Database = {
           payment_status: string
           policy_key: string
           policy_number: string | null
+          premium_frequency: string | null
           raw_preview_text: string | null
           received_at: string | null
           updated_at: string | null
@@ -86,6 +87,7 @@ export type Database = {
           payment_status?: string
           policy_key: string
           policy_number?: string | null
+          premium_frequency?: string | null
           raw_preview_text?: string | null
           received_at?: string | null
           updated_at?: string | null
@@ -106,6 +108,7 @@ export type Database = {
           payment_status?: string
           policy_key?: string
           policy_number?: string | null
+          premium_frequency?: string | null
           raw_preview_text?: string | null
           received_at?: string | null
           updated_at?: string | null

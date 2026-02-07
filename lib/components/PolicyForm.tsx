@@ -14,6 +14,7 @@ export interface PolicyFormData {
   insurerName: string;
   policyNumber: string;
   amount: string;
+  premium_frequency: string;
   dueDate: string;
   paymentStatus: string;
   emailSubject: string;
@@ -109,6 +110,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
     insurerName: '',
     policyNumber: '',
     amount: '',
+    premium_frequency: 'annual',
     dueDate: '',
     paymentStatus: 'PENDING',
     emailSubject: '',
@@ -127,6 +129,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
           insurerName: initialData.insurerName || '',
           policyNumber: initialData.policyNumber || '',
           amount: initialData.amount || '',
+          premium_frequency: initialData.premium_frequency || 'annual',
           dueDate: initialData.dueDate || '',
           paymentStatus: initialData.paymentStatus || 'PENDING',
           emailSubject: initialData.emailSubject || '',
@@ -137,6 +140,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
           insurerName: '',
           policyNumber: '',
           amount: '',
+          premium_frequency: 'annual',
           dueDate: '',
           paymentStatus: 'PENDING',
           emailSubject: '',
@@ -306,7 +310,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
           {/* Amount and Due Date Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <PremiumInput
-              label="Annual Premium"
+              label="Premium Amount"
               type="number"
               value={formData.amount}
               onChange={handleInputChange('amount')}
@@ -317,15 +321,29 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
               help="Enter amount in ₹"
             />
 
-            <PremiumInput
-              label="Due Date"
-              type="date"
-              value={formData.dueDate}
-              onChange={handleInputChange('dueDate')}
-              error={errors.dueDate}
-              help="When is the next payment due?"
+            <PremiumSelect
+              label="Premium Frequency"
+              value={formData.premium_frequency || 'annual'}
+              onChange={handleInputChange('premium_frequency')}
+              options={[
+                { value: 'monthly', label: 'Monthly' },
+                { value: 'quarterly', label: 'Quarterly' },
+                { value: 'halfyearly', label: 'Half-Yearly' },
+                { value: 'annual', label: 'Annual' },
+              ]}
+              help="How often do you pay this premium?"
             />
           </div>
+
+          {/* Due Date */}
+          <PremiumInput
+            label="Due Date"
+            type="date"
+            value={formData.dueDate}
+            onChange={handleInputChange('dueDate')}
+            error={errors.dueDate}
+            help="When is the next payment due?"
+          />
 
           {/* Payment Status */}
           <PremiumSelect

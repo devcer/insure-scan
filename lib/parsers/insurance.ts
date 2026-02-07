@@ -132,6 +132,7 @@ export interface ParsedInsuranceData {
   dueDate: Date | null;
   paymentStatus: PaymentStatus;
   policyType: string | null;
+  premiumFrequency: string; // monthly, quarterly, halfyearly, annual
   confidenceScore: number; // 0-1 range
   fieldConfidence: FieldConfidence;
   extractedText: {
@@ -466,6 +467,16 @@ const POLICY_TYPE_KEYWORDS = {
   home: ["home", "property", "house", "dwelling"],
   travel: ["travel", "trip", "overseas"],
   other: ["general", "personal", "accident", "liability"],
+};
+
+/**
+ * Premium frequency keywords
+ */
+const PREMIUM_FREQUENCY_KEYWORDS = {
+  monthly: ["monthly", "per month", "/month", "every month", "month premium", "monthly premium", "monthly installment"],
+  quarterly: ["quarterly", "per quarter", "/quarter", "every quarter", "quarter premium", "quarterly premium", "3 months"],
+  halfyearly: ["half yearly", "half-yearly", "semi-annual", "semi annual", "6 months", "six months"],
+  annual: ["annual", "yearly", "per year", "/year", "every year", "year premium", "annual premium", "12 months"],
 };
 
 /**
@@ -865,6 +876,36 @@ function detectPolicyType(text: string): string | null {
 }
 
 /**
+ * Detects premium frequency from email text
+ */
+function detectPremiumFrequency(text: string, subject: string): string {
+  const combinedText = `${text} ${subject}`.toLowerCase();
+
+  // Check for monthly first (most specific)
+  if (PREMIUM_FREQUENCY_KEYWORDS.monthly.some((kw) => combinedText.includes(kw))) {
+    return "monthly";
+  }
+
+  // Check for quarterly
+  if (PREMIUM_FREQUENCY_KEYWORDS.quarterly.some((kw) => combinedText.includes(kw))) {
+    return "quarterly";
+  }
+
+  // Check for half-yearly
+  if (PREMIUM_FREQUENCY_KEYWORDS.halfyearly.some((kw) => combinedText.includes(kw))) {
+    return "halfyearly";
+  }
+
+  // Check for annual
+  if (PREMIUM_FREQUENCY_KEYWORDS.annual.some((kw) => combinedText.includes(kw))) {
+    return "annual";
+  }
+
+  // Default to annual if not specified
+  return "annual";
+}
+
+/**
  * Enhanced confidence calculation with individual field scoring
  *
  * Scoring weights:
@@ -947,6 +988,7 @@ export function parseInsuranceEmail(
     const dateResult = extractDueDate(text, errors);
     const paymentStatus = inferPaymentStatus(text);
     const policyType = detectPolicyType(text);
+    const premiumFrequency = detectPremiumFrequency(text, metadata.subject || "");
 
     // Build field confidence scores
     const fieldConfidence: FieldConfidence = {
@@ -1003,6 +1045,7 @@ export function parseInsuranceEmail(
       dueDate: dateResult.date,
       paymentStatus,
       policyType,
+      premiumFrequency,
       confidenceScore: fieldConfidence.overall,
       fieldConfidence,
       extractedText: {
@@ -1037,6 +1080,7 @@ export function parseInsuranceEmail(
       dueDate: null,
       paymentStatus: "pending",
       policyType: null,
+      premiumFrequency: "annual",
       confidenceScore: 0,
       fieldConfidence: {
         insurerName: 0,

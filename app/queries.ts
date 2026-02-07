@@ -173,7 +173,20 @@ export const attachmentQuery = `newer_than:365d
 (
   ${buildFromClause(insuranceDomains)}
 )
-has:attachment
+(
+  subject:(
+    premium OR renewal OR "payment due" OR "due date" OR 
+    "policy renewal" OR "premium reminder" OR invoice OR receipt OR
+    "payment successful" OR "payment received" OR "renew now" OR
+    "policy issued" OR "policy document"
+  )
+  OR
+  (
+    (premium OR renewal OR payment OR policy)
+    (due OR reminder OR invoice OR receipt OR issued)
+  )
+)
+-category:social -category:forums -category:promotions
 `.trim();
 
 export const paymentQuery = `newer_than:365d

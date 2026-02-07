@@ -14,6 +14,7 @@ export interface PolicyData {
   insurerName: string;
   policyNumber?: string;
   amount: number;
+  premium_frequency?: string;
   dueDate?: string;
   status: 'PAID' | 'PENDING' | 'OVERDUE' | 'UNKNOWN';
   type: string;
@@ -352,7 +353,7 @@ export const PolicyCard: React.FC<PolicyCardProps> = ({
             {formatCurrency(policy.amount)}
           </span>
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            annual premium
+            {policy.premium_frequency || 'annual'} premium
           </span>
         </div>
       </div>
