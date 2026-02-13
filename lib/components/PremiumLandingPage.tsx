@@ -49,19 +49,19 @@ export function PremiumLandingPage() {
         <header className="w-full px-6 py-4 flex items-center justify-between glass backdrop-blur-xl sticky top-0 z-30 border-b border-glass-border">
           <div className="flex items-center gap-3">
             <LightingEffects intensity="medium">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-premium animate-float">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-premium animate-float">
                 <span className="text-white font-bold text-xl">I</span>
               </div>
             </LightingEffects>
-            <span className="font-bold text-2xl tracking-tight bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+            <span className="font-bold text-2xl tracking-tight bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
               InsureScan
             </span>
           </div>
 
           <nav className="hidden md:flex gap-8 text-gray-600 dark:text-gray-300 text-sm font-medium">
-            <a href="#features" className="hover:text-primary-600 dark:hover:text-primary-400 transition-all duration-300 hover:scale-105">Features</a>
-            <a href="#how" className="hover:text-primary-600 dark:hover:text-primary-400 transition-all duration-300 hover:scale-105">How it Works</a>
-            <a href="#privacy" className="hover:text-primary-600 dark:hover:text-primary-400 transition-all duration-300 hover:scale-105">Privacy</a>
+            <a href="#features" className="hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 hover:scale-105">Features</a>
+            <a href="#how" className="hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 hover:scale-105">How it Works</a>
+            <a href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 hover:scale-105">Privacy</a>
           </nav>
 
           <PremiumButton variant="primary" glow className="animate-pulse-glow bg-blue-600 hover:bg-blue-700 text-white" onClick={handleGoogleSignIn}>
@@ -120,7 +120,7 @@ function HeroSection({ onGetStarted }: { onGetStarted: () => void }) {
           <h1 className="text-6xl md:text-8xl font-extrabold text-gray-900 dark:text-white mb-8 leading-tight animate-fade-in">
             Never miss an
             <br />
-            <span className="bg-gradient-to-r from-primary-600 via-accent-500 to-primary-700 bg-clip-text text-transparent animate-gradient-shift">
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 bg-clip-text text-transparent font-extrabold">
               insurance premium
             </span>
             <br />
@@ -165,7 +165,7 @@ function TrustSection({ metrics }: { metrics: any[] }) {
               ].map((item, index) => (
                 <LightingEffects key={index} intensity="medium">
                   <div className="flex flex-col items-center text-center p-6 rounded-2xl glass hover-scale animate-slide-in-up">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mb-4 shadow-premium animate-float">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-premium animate-float">
                       <span className="text-3xl">{item.icon}</span>
                     </div>
                     <span className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">{item.title}</span>
@@ -188,7 +188,7 @@ function TrustSection({ metrics }: { metrics: any[] }) {
 
 function HowItWorksSection() {
   return (
-    <section className="py-24 px-4 relative">
+    <section id="how" className="py-24 px-4 relative">
       <ParallaxContainer speed={0.15}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20">
@@ -197,12 +197,12 @@ function HowItWorksSection() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 relative">
-            <div className="hidden md:block absolute top-20 left-1/3 right-1/3 h-1 bg-gradient-to-r from-primary-200 via-primary-500 to-primary-200 dark:from-primary-800 dark:via-primary-600 dark:to-primary-800 rounded-full animate-gradient-shift"></div>
+            <div className="hidden md:block absolute top-20 left-1/3 right-1/3 h-1 bg-gradient-to-r from-blue-200 via-blue-500 to-blue-200 dark:from-blue-800 dark:via-blue-600 dark:to-blue-800 rounded-full animate-gradient-shift"></div>
 
             {[
-              { step: 1, title: "Connect Gmail", desc: "Secure OAuth login with Google. We only request read-only access.", time: "30 seconds", color: "from-primary-500 to-primary-600" },
-              { step: 2, title: "Scan Insurance Emails", desc: "Our AI scans your inbox for insurance emails automatically.", time: "1 minute", color: "from-accent-500 to-accent-600" },
-              { step: 3, title: "View Dashboard", desc: "See all your policies, due dates, and payment history.", time: "Instant", color: "from-secondary-500 to-secondary-600" }
+              { step: 1, title: "Connect Gmail", desc: "Secure OAuth login with Google. We only request read-only access.", time: "30 seconds", color: "from-blue-500 to-blue-600" },
+              { step: 2, title: "Scan Insurance Emails", desc: "Our AI scans your inbox for insurance emails automatically.", time: "1 minute", color: "from-purple-500 to-purple-600" },
+              { step: 3, title: "View Dashboard", desc: "See all your policies, due dates, and payment history.", time: "Instant", color: "from-indigo-500 to-indigo-600" }
             ].map((item, index) => (
               <div key={index} className="relative animate-slide-in-up" style={{ animationDelay: `${index * 200}ms` }}>
                 <LightingEffects intensity="strong">
@@ -213,7 +213,7 @@ function HowItWorksSection() {
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{item.title}</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">{item.desc}</p>
                     <div className="inline-flex items-center gap-2 glass-premium px-4 py-2 rounded-full text-sm font-medium">
-                      <div className="w-3 h-3 bg-success-500 rounded-full animate-pulse"></div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                       {item.time}
                     </div>
                   </PremiumCard>
@@ -229,7 +229,7 @@ function HowItWorksSection() {
 
 function FeaturesSection() {
   return (
-    <section className="py-24 px-4 relative">
+    <section id="features" className="py-24 px-4 relative">
       <ParallaxContainer speed={0.1}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20">
@@ -239,12 +239,12 @@ function FeaturesSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { title: "Smart Dashboard", desc: "See all upcoming due dates and payment history in one place.", icon: "📊", gradient: "from-primary-500 to-primary-600" },
-              { title: "Multi-Policy Tracking", desc: "Track multiple policies for you and your family members.", icon: "👨‍👩‍👧‍👦", gradient: "from-success-500 to-success-600" },
-              { title: "Payment History", desc: "View all receipts and payment confirmations automatically.", icon: "🧾", gradient: "from-accent-500 to-accent-600" },
-              { title: "Smart Classification", desc: "Automatic classification of emails with high accuracy.", icon: "🎯", gradient: "from-warning-500 to-warning-600" },
-              { title: "Advanced Search", desc: "Find policies quickly by name, date, or policy number.", icon: "🔍", gradient: "from-info-500 to-info-600" },
-              { title: "Privacy First", desc: "No raw emails stored. Bank-level security.", icon: "🛡️", gradient: "from-error-500 to-error-600" }
+              { title: "Smart Dashboard", desc: "See all upcoming due dates and payment history in one place.", icon: "📊", gradient: "from-blue-500 to-blue-600" },
+              { title: "Multi-Policy Tracking", desc: "Track multiple policies for you and your family members.", icon: "👨‍👩‍👧‍👦", gradient: "from-green-500 to-green-600" },
+              { title: "Payment History", desc: "View all receipts and payment confirmations automatically.", icon: "🧾", gradient: "from-purple-500 to-purple-600" },
+              { title: "Smart Classification", desc: "Automatic classification of emails with high accuracy.", icon: "🎯", gradient: "from-amber-500 to-amber-600" },
+              { title: "Advanced Search", desc: "Find policies quickly by name, date, or policy number.", icon: "🔍", gradient: "from-cyan-500 to-cyan-600" },
+              { title: "Privacy First", desc: "No raw emails stored. Bank-level security.", icon: "🛡️", gradient: "from-red-500 to-red-600" }
             ].map((feature, index) => (
               <div key={index} className="animate-slide-in-up" style={{ animationDelay: `${index * 100}ms` }}>
                 <LightingEffects intensity="medium">
@@ -271,7 +271,7 @@ function CTASection({ onGetStarted }: { onGetStarted: () => void }) {
       <ParallaxContainer speed={0.2}>
         <div className="max-w-4xl mx-auto text-center">
           <LightingEffects intensity="strong">
-            <PremiumCard variant="glass" className="p-16 glass-aurora backdrop-blur-xl animate-gradient-shift">
+            <div className="p-16 bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 animate-gradient-shift">
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white animate-bounce-in">
                 Ready to never miss a premium again?
               </h2>
@@ -286,7 +286,7 @@ function CTASection({ onGetStarted }: { onGetStarted: () => void }) {
               <PremiumButton variant="secondary" size="xl" glow className="bg-white text-blue-700 font-bold shadow-premium hover:shadow-glow-strong animate-pulse-glow" onClick={onGetStarted}>
                 Get Started Free
               </PremiumButton>
-            </PremiumCard>
+            </div>
           </LightingEffects>
         </div>
       </ParallaxContainer>
@@ -302,7 +302,7 @@ function Footer() {
           <div className="animate-fade-in">
             <div className="flex items-center gap-3 mb-6">
               <LightingEffects intensity="medium">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl flex items-center justify-center shadow-premium">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-premium">
                   <span className="text-white font-bold text-lg">I</span>
                 </div>
               </LightingEffects>
@@ -321,7 +321,7 @@ function Footer() {
               <ul className="space-y-3">
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
-                    <Link href={link.href} className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-all duration-300 hover:scale-105 inline-block">
+                    <Link href={link.href} className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 hover:scale-105 inline-block">
                       {link.text}
                     </Link>
                   </li>
