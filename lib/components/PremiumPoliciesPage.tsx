@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from '../utils/cn';
 import { PremiumSearch, SearchSuggestion } from './PremiumSearch';
 import { PremiumFilters, FilterGroup } from './PremiumFilters';
@@ -24,6 +25,8 @@ export interface PremiumPoliciesPageProps {
 export const PremiumPoliciesPage: React.FC<PremiumPoliciesPageProps> = ({
   className,
 }) => {
+  const router = useRouter();
+
   // State management
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
@@ -450,6 +453,7 @@ export const PremiumPoliciesPage: React.FC<PremiumPoliciesPageProps> = ({
         policies={filteredPolicies}
         variant={viewMode === 'list' ? 'compact' : 'default'}
         loading={loading}
+        onClick={(id) => router.push(`/policies/${id}`)}
         onEdit={handleEditPolicy}
         onArchive={handleArchivePolicy}
         onReorder={dragEnabled ? handlePolicyReorder : undefined}

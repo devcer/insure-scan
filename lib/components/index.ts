@@ -142,6 +142,11 @@ export {
   type PremiumPoliciesPageProps,
 } from './PremiumPoliciesPage';
 
+export {
+  PolicyDetailsPage,
+  type PolicyDetailsPageProps,
+} from './PolicyDetailsPage';
+
 // Icons
 export {
   PolicyIcon,

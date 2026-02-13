@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { DashboardStatsCard, PremiumButton, RefreshIcon, SpinnerIcon, PolicyIcon, BellIcon, CurrencyIcon, SparklesIcon, PolicyGrid } from "../../lib/components";
 import { useDashboardStats, usePolicies } from "../../lib/hooks";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { data: session } = useSession();
   const {
     data,
@@ -287,6 +289,7 @@ export default function DashboardPage() {
           policies={recentPolicies}
           variant="compact"
           loading={policiesLoading}
+          onClick={(id) => router.push(`/policies/${id}`)}
           className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
         />
       </div>

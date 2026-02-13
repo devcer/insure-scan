@@ -5,7 +5,7 @@ import { listInsuranceEmails, getEmailMessage, isGmailApiError } from "@/lib/gma
 import { extractEmailMetadata, decodeMessage } from "@/lib/gmail/decodeMessage";
 import { INSURANCE_QUERY } from "@/lib/gmail/gmailQuery";
 import { getCompanyNameFromEmail } from "@/lib/domain/companyMapping";
-import { parseInsuranceEmail } from "@/lib/parsers/insurance";
+import { parseInsuranceEmailHybrid } from "@/lib/parsers/hybridParser";
 
 export async function POST() {
   try {
@@ -103,9 +103,13 @@ export async function POST() {
           bodyPreview: body.slice(0, 100) + "...",
         });
 
-        // Parse insurance data using regex extraction with debug mode enabled
-        console.log(`[SCAN] 🔍 Parsing insurance data from email body...`);
-        const parsedData = parseInsuranceEmail(body, metadata, true); // Enable debug mode
+        // Parse insurance data using hybrid approach (regex + LLM fallback)
+        console.log(`[SCAN] 🔍 Parsing insurance data with hybrid parser...`);
+        const parsedData = await parseInsuranceEmailHybrid(body, metadata, {
+          llmFallbackThreshold: 0.6, // Use LLM if regex confidence < 60%
+          enableDebug: true, // Enable detailed logging
+          mergeStrategy: "highest_confidence", // Pick best value per field
+        });
 
         console.log(`[SCAN] 📊 Extracted data:`, {
           insurer: parsedData.insurerName,
