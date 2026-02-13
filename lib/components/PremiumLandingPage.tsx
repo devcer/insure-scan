@@ -107,17 +107,17 @@ export function PremiumLandingPage() {
 
 function HeroSection({ onGetStarted }: { onGetStarted: () => void }) {
   return (
-    <section className="flex flex-col items-center justify-center text-center py-32 px-4 relative">
+    <section className="flex flex-col items-center justify-center text-center min-h-[85vh] py-8 px-4 relative">
       <ParallaxContainer speed={0.2}>
         <div className="relative z-10 max-w-6xl mx-auto">
           <LightingEffects intensity="subtle">
-            <div className="inline-flex items-center gap-2 glass-premium text-primary-700 dark:text-primary-300 px-6 py-3 rounded-full text-sm font-medium mb-8 border border-glass-border-strong animate-bounce-in">
-              <div className="w-3 h-3 bg-primary-500 rounded-full animate-pulse-glow"></div>
+            <div className="inline-flex items-center gap-2 glass-premium text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-xs md:text-sm font-medium mb-4 md:mb-6 border border-glass-border-strong animate-bounce-in">
+              <div className="w-2 h-2 md:w-3 md:h-3 bg-blue-500 rounded-full animate-pulse-glow"></div>
               Now supporting 130+ Indian insurers
             </div>
           </LightingEffects>
 
-          <h1 className="text-6xl md:text-8xl font-extrabold text-gray-900 dark:text-white mb-8 leading-tight animate-fade-in">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 dark:text-white mb-4 md:mb-6 leading-tight animate-fade-in">
             Never miss an
             <br />
             <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 bg-clip-text text-transparent font-extrabold">
@@ -127,15 +127,15 @@ function HeroSection({ onGetStarted }: { onGetStarted: () => void }) {
             again.
           </h1>
 
-          <p className="text-2xl md:text-3xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed animate-slide-in-up">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-6 md:mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-in-up">
             Connect your Gmail and instantly track premium due dates, receipts, and policy renewals.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-6 mb-12 justify-center animate-slide-in-up">
-            <PremiumButton variant="primary" size="xl" glow className="shadow-glow-strong bg-blue-600 hover:bg-blue-700 text-white" onClick={onGetStarted}>
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center animate-slide-in-up">
+            <PremiumButton variant="primary" size="lg" glow className="shadow-glow-strong bg-blue-600 hover:bg-blue-700 text-white" onClick={onGetStarted}>
               Continue with Google
             </PremiumButton>
-            <PremiumButton variant="glass" size="xl" className="backdrop-blur-xl">
+            <PremiumButton variant="glass" size="lg" className="backdrop-blur-xl">
               Watch Demo
             </PremiumButton>
           </div>
