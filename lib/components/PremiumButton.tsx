@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { cn } from '../utils/cn';
-import { aria, keyboard } from '../utils/accessibility';
+import { keyboard } from '../utils/accessibility';
 
 export interface PremiumButtonProps {
   /** Button variant style */
@@ -153,9 +153,9 @@ export const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonPr
   // Variant-specific classes
   const variantClasses = {
     primary: cn(
-      'bg-primary-600 hover:bg-primary-700',
+      'bg-blue-600 hover:bg-blue-700',
       'text-white',
-      'border border-primary-600 hover:border-primary-700',
+      'border border-blue-600 hover:border-blue-700',
       'shadow-sm hover:shadow-md',
       'focus:ring-blue-500'
     ),

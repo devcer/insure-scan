@@ -233,7 +233,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
       preventBackdropClose={isSubmitting}
       preventEscapeClose={isSubmitting}
     >
-      <form onSubmit={handleSubmit} className="p-6">
+      <form onSubmit={handleSubmit} className="p-4 md:p-6">
         {/* Success animation */}
         {submitSuccess && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20 backdrop-blur-sm">
@@ -256,27 +256,27 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
         )}
 
         {/* Form header with insurance type preview */}
-        <div className="mb-8 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-4">
+        <div className="mb-6 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3">
             <div className={cn(
-              'p-3 rounded-xl border transition-all duration-200',
+              'p-2 rounded-lg border transition-all duration-200',
               typeColors.bg,
               typeColors.border
             )}>
-              <InsuranceIcon className={cn('w-6 h-6', typeColors.icon)} />
+              <InsuranceIcon className={cn('w-5 h-5', typeColors.icon)} />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">
+              <h3 className="font-semibold text-sm text-gray-900 dark:text-white">
                 {formData.insuranceType}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 {formData.insurerName || 'Enter company name to get started'}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Company Name */}
           <PremiumInput
             label="Insurance Company"
@@ -308,7 +308,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
           />
 
           {/* Amount and Due Date Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <PremiumInput
               label="Premium Amount"
               type="number"
@@ -360,14 +360,14 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
             value={formData.emailSubject}
             onChange={handleInputChange('emailSubject')}
             placeholder="Add any notes or summary about this policy..."
-            rows={4}
+            rows={3}
             help="Optional - Any additional information about this policy"
           />
         </div>
 
         {/* Submit Error */}
         {errors.submit && (
-          <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+          <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
             <p className="text-sm text-red-600 dark:text-red-400">
               {errors.submit}
             </p>
@@ -375,7 +375,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
         )}
 
         {/* Form Actions */}
-        <div className="mt-8 flex gap-4 justify-end">
+        <div className="mt-6 flex gap-3 justify-end">
           <PremiumButton
             variant="ghost"
             onClick={handleClose}

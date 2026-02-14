@@ -110,7 +110,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       <div
         ref={focusTrapRef as React.RefObject<HTMLDivElement>}
         className={cn(
-          'relative w-full glass border border-glass-border shadow-2xl',
+          'relative w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl rounded-2xl',
           'animate-scale-in origin-center',
           'max-h-[90vh] overflow-hidden',
           'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
@@ -123,7 +123,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
         aria-labelledby={titleId}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-glass-border">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           <h2
             id={titleId}
             className="text-2xl font-bold text-gray-900 dark:text-white"
