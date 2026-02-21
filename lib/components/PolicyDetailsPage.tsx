@@ -350,7 +350,8 @@ export const PolicyDetailsPage: React.FC<PolicyDetailsPageProps> = ({ policyId }
               variant="secondary"
               size="sm"
               onClick={() => setIsEditModalOpen(true)}
-              leftIcon={<PencilIcon className="w-4 h-4" />}
+              icon={PencilIcon}
+              iconPosition="left"
             >
               Edit
             </PremiumButton>
@@ -358,15 +359,17 @@ export const PolicyDetailsPage: React.FC<PolicyDetailsPageProps> = ({ policyId }
               variant="secondary"
               size="sm"
               onClick={handleArchiveToggle}
-              leftIcon={<ArchiveBoxIcon className="w-4 h-4" />}
+              icon={ArchiveBoxIcon}
+              iconPosition="left"
             >
               {policy.archived ? 'Restore' : 'Archive'}
             </PremiumButton>
             <PremiumButton
-              variant="danger"
+              variant="secondary"
               size="sm"
               onClick={() => setIsDeleteModalOpen(true)}
-              leftIcon={<TrashIcon className="w-4 h-4" />}
+              icon={TrashIcon}
+              iconPosition="left"
             >
               Delete
             </PremiumButton>
@@ -535,7 +538,8 @@ export const PolicyDetailsPage: React.FC<PolicyDetailsPageProps> = ({ policyId }
                     <PremiumButton
                       variant="secondary"
                       size="sm"
-                      leftIcon={<EnvelopeIcon className="w-4 h-4" />}
+                      icon={EnvelopeIcon}
+                      iconPosition="left"
                       onClick={() => window.open(`https://mail.google.com/mail/u/0/#inbox/${policy.gmail_message_id}`, '_blank')}
                     >
                       View in Gmail
@@ -618,24 +622,24 @@ export const PolicyDetailsPage: React.FC<PolicyDetailsPageProps> = ({ policyId }
               <div className="space-y-2">
                 <PremiumButton
                   variant="secondary"
-                  fullWidth
-                  leftIcon={<PencilIcon className="w-4 h-4" />}
+                  icon={PencilIcon}
+                  iconPosition="left"
                   onClick={() => setIsEditModalOpen(true)}
                 >
                   Edit Policy
                 </PremiumButton>
                 <PremiumButton
                   variant="secondary"
-                  fullWidth
-                  leftIcon={<ArchiveBoxIcon className="w-4 h-4" />}
+                  icon={ArchiveBoxIcon}
+                  iconPosition="left"
                   onClick={handleArchiveToggle}
                 >
                   {policy.archived ? 'Restore Policy' : 'Archive Policy'}
                 </PremiumButton>
                 <PremiumButton
-                  variant="danger"
-                  fullWidth
-                  leftIcon={<TrashIcon className="w-4 h-4" />}
+                  variant="secondary"
+                  icon={TrashIcon}
+                  iconPosition="left"
                   onClick={() => setIsDeleteModalOpen(true)}
                 >
                   Delete Policy
@@ -647,26 +651,18 @@ export const PolicyDetailsPage: React.FC<PolicyDetailsPageProps> = ({ policyId }
       </div>
 
       {/* Edit Modal */}
-      <PremiumModal
+      <PolicyForm
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Policy"
-      >
-        <PolicyForm
-          initialData={{
-            id: policy.id,
-            insurerName: policy.insurer_name,
-            policyNumber: policy.policy_number || undefined,
-            amount: policy.amount || undefined,
-            dueDate: policy.due_date || undefined,
-            status: policy.payment_status as any,
-            type: policyType,
-            premium_frequency: policy.premium_frequency || undefined,
-          }}
-          onSubmit={handleEditSave}
-          onCancel={() => setIsEditModalOpen(false)}
-        />
-      </PremiumModal>
+        initialData={{
+          insurerName: policy.insurer_name,
+          policyNumber: policy.policy_number || undefined,
+          amount: policy.amount?.toString() || undefined,
+          dueDate: policy.due_date || undefined,
+          premium_frequency: policy.premium_frequency || undefined,
+        }}
+        onSubmit={handleEditSave}
+      />
 
       {/* Delete Confirmation Modal */}
       <PremiumModal
@@ -687,9 +683,10 @@ export const PolicyDetailsPage: React.FC<PolicyDetailsPageProps> = ({ policyId }
               Cancel
             </PremiumButton>
             <PremiumButton
-              variant="danger"
+              variant="secondary"
               onClick={handleDelete}
               loading={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700 focus:ring-red-500 dark:bg-red-600 dark:hover:bg-red-700 dark:border-red-600 dark:hover:border-red-700"
             >
               Delete Policy
             </PremiumButton>

@@ -14,6 +14,187 @@ export type Database = {
   }
   public: {
     Tables: {
+      family_audit_entries: {
+        Row: {
+          activity: Database["public"]["Enums"]["audit_activity"]
+          details: Json
+          family_member_id: string | null
+          id: string
+          ip_address: string | null
+          timestamp: string
+          user_agent: string | null
+          vault_owner_id: string
+        }
+        Insert: {
+          activity: Database["public"]["Enums"]["audit_activity"]
+          details?: Json
+          family_member_id?: string | null
+          id?: string
+          ip_address?: string | null
+          timestamp?: string
+          user_agent?: string | null
+          vault_owner_id: string
+        }
+        Update: {
+          activity?: Database["public"]["Enums"]["audit_activity"]
+          details?: Json
+          family_member_id?: string | null
+          id?: string
+          ip_address?: string | null
+          timestamp?: string
+          user_agent?: string | null
+          vault_owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_audit_entries_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_audit_entries_vault_owner_id_fkey"
+            columns: ["vault_owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          permissions: Database["public"]["Enums"]["permission_level"]
+          status: Database["public"]["Enums"]["invitation_status"]
+          token: string
+          vault_owner_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          permissions: Database["public"]["Enums"]["permission_level"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token: string
+          vault_owner_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          permissions?: Database["public"]["Enums"]["permission_level"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
+          vault_owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_invitations_vault_owner_id_fkey"
+            columns: ["vault_owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_access_at: string | null
+          permissions: Database["public"]["Enums"]["permission_level"]
+          specific_policy_ids: string[] | null
+          status: Database["public"]["Enums"]["family_member_status"]
+          vault_owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          last_access_at?: string | null
+          permissions: Database["public"]["Enums"]["permission_level"]
+          specific_policy_ids?: string[] | null
+          status?: Database["public"]["Enums"]["family_member_status"]
+          vault_owner_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_access_at?: string | null
+          permissions?: Database["public"]["Enums"]["permission_level"]
+          specific_policy_ids?: string[] | null
+          status?: Database["public"]["Enums"]["family_member_status"]
+          vault_owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_vault_owner_id_fkey"
+            columns: ["vault_owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_security_alerts: {
+        Row: {
+          alert_type: Database["public"]["Enums"]["security_alert_type"]
+          description: string
+          family_member_id: string
+          id: string
+          resolved: boolean
+          severity: Database["public"]["Enums"]["alert_severity"]
+          timestamp: string
+          vault_owner_id: string
+        }
+        Insert: {
+          alert_type: Database["public"]["Enums"]["security_alert_type"]
+          description: string
+          family_member_id: string
+          id?: string
+          resolved?: boolean
+          severity: Database["public"]["Enums"]["alert_severity"]
+          timestamp?: string
+          vault_owner_id: string
+        }
+        Update: {
+          alert_type?: Database["public"]["Enums"]["security_alert_type"]
+          description?: string
+          family_member_id?: string
+          id?: string
+          resolved?: boolean
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          timestamp?: string
+          vault_owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_security_alerts_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_security_alerts_vault_owner_id_fkey"
+            columns: ["vault_owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gmail_connections: {
         Row: {
           access_token: string | null
@@ -151,7 +332,23 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      alert_severity: "low" | "medium" | "high"
+      audit_activity:
+        | "invitation_sent"
+        | "invitation_accepted"
+        | "invitation_revoked"
+        | "policy_accessed"
+        | "permissions_changed"
+        | "access_revoked"
+        | "suspicious_activity_detected"
+      family_member_status: "active" | "suspended" | "revoked"
+      invitation_status: "pending" | "accepted" | "expired" | "revoked"
+      permission_level: "view_all" | "view_specific"
+      security_alert_type:
+        | "unusual_access_pattern"
+        | "multiple_failed_attempts"
+        | "access_from_new_location"
+        | "bulk_policy_access"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -278,6 +475,42 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      alert_severity: {
+        low: "low" as const,
+        medium: "medium" as const,
+        high: "high" as const,
+      },
+      audit_activity: {
+        invitation_sent: "invitation_sent" as const,
+        invitation_accepted: "invitation_accepted" as const,
+        invitation_revoked: "invitation_revoked" as const,
+        policy_accessed: "policy_accessed" as const,
+        permissions_changed: "permissions_changed" as const,
+        access_revoked: "access_revoked" as const,
+        suspicious_activity_detected: "suspicious_activity_detected" as const,
+      },
+      family_member_status: {
+        active: "active" as const,
+        suspended: "suspended" as const,
+        revoked: "revoked" as const,
+      },
+      invitation_status: {
+        pending: "pending" as const,
+        accepted: "accepted" as const,
+        expired: "expired" as const,
+        revoked: "revoked" as const,
+      },
+      permission_level: {
+        view_all: "view_all" as const,
+        view_specific: "view_specific" as const,
+      },
+      security_alert_type: {
+        unusual_access_pattern: "unusual_access_pattern" as const,
+        multiple_failed_attempts: "multiple_failed_attempts" as const,
+        access_from_new_location: "access_from_new_location" as const,
+        bulk_policy_access: "bulk_policy_access" as const,
+      },
+    },
   },
 } as const
